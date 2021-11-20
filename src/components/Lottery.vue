@@ -38,13 +38,13 @@ const handPositionRef = ref<Vector>();
 const rotateSpeed = ref(0);
 
 const grabOneBall = useGrabOneBall();
-const destroy$ = new Subject<void>();
+const destroy$$ = new Subject<void>();
 const stopRotate$$ = new Subject<void>();
 
 const { engineRef, isRunning, rendererReady$$ } = useRenderer(canvasContainer);
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
-  const running$ = autoPauseRender(renderer, destroy$);
+  const running$ = autoPauseRender(renderer, destroy$$);
   running$.subscribe((running) => {
     isRunning.value = running;
   });
@@ -57,8 +57,8 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
 });
 
 onUnmounted(() => {
-  destroy$.next();
-  destroy$.complete();
+  destroy$$.next();
+  destroy$$.complete();
 });
 
 watch(rotateSpeed, (speed) => setRotateInterval(speed / 200));
