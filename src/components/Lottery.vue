@@ -4,6 +4,7 @@
 
     <div class="rotate-action-container">
       <NButton class="rotate-button" @mousedown="startRotateLeft">← Left</NButton>
+      <NButton class="rotate-button" @mousedown="grabBall">Grab</NButton>
       <NButton class="rotate-button" @mousedown="startRotateRight">Right →</NButton>
     </div>
   </div>
@@ -12,22 +13,25 @@
 <script lang="ts" setup>
 import { ref, onUnmounted } from 'vue';
 
-import { Body } from 'matter-js';
+import { Body, Vector } from 'matter-js';
 // noinspection ES6UnusedImports
 import { NButton } from 'naive-ui';
 import { Subject, interval, takeUntil, fromEvent, startWith } from 'rxjs';
 
 import { autoPauseRender } from '@/auto-pause-render';
-import { createSense, createMouseConstraint } from '@modules/lottery/scenes';
+import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
+import { useGrabOneBall } from '@modules/lottery/use-grab-one-ball';
 import { useRenderer } from '@modules/lottery/use-renderer';
 
 const canvasContainer = ref<HTMLDivElement>();
 
-const octagonRef = ref<Body>();
+const scenesRef = ref<Scenes>();
+const handPositionRef = ref<Vector>();
 
+const grabOneBall = useGrabOneBall();
 const destroy$ = new Subject<void>();
 
-const { rendererReady$$, isRunning } = useRenderer(canvasContainer);
+const { engineRef, isRunning, rendererReady$$ } = useRenderer(canvasContainer);
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
   const running$ = autoPauseRender(renderer, destroy$);
@@ -35,8 +39,8 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
     isRunning.value = running;
   });
 
-  const { octagon } = createSense(engine.world, width, height);
-  octagonRef.value = octagon;
+  scenesRef.value = createSense(engine.world, width, height);
+  handPositionRef.value = scenesRef.value.hand.position;
 
   const mouse = createMouseConstraint(renderer.canvas, engine);
   renderer.addMouse(mouse);
@@ -62,10 +66,20 @@ function startRotateRight(event: MouseEvent): void {
 }
 
 function rotateOctagonBound(velocity: number): void {
-  if (!octagonRef.value) {
+  if (!scenesRef.value) {
     return;
   }
-  Body.setAngularVelocity(octagonRef.value, velocity);
+  Body.setAngularVelocity(scenesRef.value.octagon, velocity);
+}
+
+function grabBall(): void {
+  const engine = engineRef.value;
+  const scenes = scenesRef.value;
+  const handPosition = handPositionRef.value;
+  if (!engine || !scenes || !handPosition) {
+    return;
+  }
+  grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, handPosition);
 }
 </script>
 

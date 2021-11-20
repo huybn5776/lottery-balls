@@ -10,7 +10,24 @@ import {
   MouseConstraint,
 } from 'matter-js';
 
-export function createSense(world: World, worldWidth: number, worldHeight: number): { octagon: Body } {
+import {
+  defaultCategory,
+  boxCategory,
+  octagonCategory,
+  ballsCategory,
+  handCategory,
+  sensorCategory,
+  combineCategory,
+  mouseCategory,
+} from '@modules/lottery/collision-categories';
+
+export interface Scenes {
+  octagon: Body;
+  hand: Body;
+  fullSizeSensor: Body;
+}
+
+export function createSense(world: World, worldWidth: number, worldHeight: number): Scenes {
   const centerPoint = { x: worldWidth / 2, y: worldHeight / 2 };
 
   const boxBound = createBoxBound(worldWidth, worldHeight);
@@ -20,9 +37,11 @@ export function createSense(world: World, worldWidth: number, worldHeight: numbe
     Math.min(worldWidth, worldHeight),
   );
   const balls = createBalls(centerPoint.x, centerPoint.y);
+  const { hand, handConstraint } = createHand(worldWidth * 0.8, -worldHeight / 2, worldHeight * 0.9, 50);
+  const fullSizeSensor = createFullSizeSensor(worldWidth, worldHeight);
 
-  Composite.add(world, [boxBound, octagon, octagonConstraint, ...balls]);
-  return { octagon };
+  Composite.add(world, [boxBound, octagon, octagonConstraint, ...balls, hand, handConstraint, fullSizeSensor]);
+  return { octagon, hand, fullSizeSensor };
 }
 
 export function createMouseConstraint(canvas: HTMLCanvasElement, engine: Engine): Mouse {
@@ -33,6 +52,7 @@ export function createMouseConstraint(canvas: HTMLCanvasElement, engine: Engine)
       angularStiffness: 0,
       render: { visible: false },
     } as Constraint & { angularStiffness: number },
+    collisionFilter: combineCategory([defaultCategory, mouseCategory], [octagonCategory, ballsCategory]),
   });
   Composite.add(engine.world, mouseConstraint);
   return mouse;
@@ -52,6 +72,7 @@ function createBoxBound(width: number, height: number): Body {
     parts: [roof, ground, leftWall, rightWall],
     render: { fillStyle: 'black' },
     isStatic: true,
+    collisionFilter: combineCategory([defaultCategory, boxCategory]),
   });
 }
 
@@ -90,6 +111,7 @@ function createOctagonBound(x: number, y: number, size: number): { octagon: Body
 
   const octagon = Body.create({
     parts: [...sides],
+    collisionFilter: combineCategory([defaultCategory, octagonCategory]),
   });
   const octagonConstraint = Constraint.create({
     pointA: { x, y },
@@ -123,10 +145,46 @@ function createBalls(x: number, y: number): Body[] {
           restitution: 0.3,
           frictionAir: 0,
           render: { fillStyle: 'gray', text: `${i + 1}`, fontSize: i <= 10 ? 22 : 18 },
+          collisionFilter: combineCategory([defaultCategory, ballsCategory]),
         },
       ),
     );
     Body.setVelocity(balls[i], { x: randomVelocity(), y: randomVelocity() });
   }
   return balls;
+}
+
+function createHand(
+  x: number,
+  y: number,
+  length: number,
+  thickness: number,
+): { hand: Body; handConstraint: Constraint } {
+  const hand = Bodies.rectangle(x, y, length, thickness, {
+    label: 'Hand',
+    angle: (Math.PI / 180) * 110,
+    render: { fillStyle: 'lightblue' },
+    chamfer: { radius: 25 },
+    isStatic: true,
+    collisionFilter: combineCategory([defaultCategory, handCategory], [ballsCategory, sensorCategory]),
+  });
+  const handConstraint = Constraint.create({
+    pointA: { x, y },
+    pointB: { x: 0, y: 0 },
+    bodyB: hand,
+    length: 0,
+    stiffness: 0.001,
+  });
+
+  return { hand, handConstraint };
+}
+
+function createFullSizeSensor(worldWidth: number, worldHeight: number): Body {
+  return Bodies.rectangle(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, {
+    label: 'Full size sensor',
+    isSensor: true,
+    isStatic: true,
+    render: { visible: false },
+    collisionFilter: combineCategory([defaultCategory, sensorCategory]),
+  });
 }
