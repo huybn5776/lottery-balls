@@ -132,25 +132,23 @@ function createBalls(x: number, y: number): Body[] {
     y: y - (rowsCount / 2) * ballSize + ballSize / 2,
   };
 
-  const randomVelocity = (): number => (Math.random() - 0.5) * 10;
-  const balls: Body[] = [];
-  for (let i = 0; i < ballsCount; i += 1) {
-    balls.push(
-      Bodies.circle(
-        startPoint.x + (i % rowsCount) * ballSize,
-        startPoint.y + Math.floor(i / rowsCount) * ballSize,
-        ballSize / 2,
-        {
-          label: `Ball${i + 1}`,
-          restitution: 0.3,
-          frictionAir: 0,
-          render: { fillStyle: 'gray', text: `${i + 1}`, fontSize: i <= 10 ? 22 : 18 },
-          collisionFilter: combineCategory([defaultCategory, ballsCategory]),
-        },
-      ),
-    );
-    Body.setVelocity(balls[i], { x: randomVelocity(), y: randomVelocity() });
-  }
+  const shuffledNumbers = [...Array(ballsCount).keys()].sort(() => 0.5 - Math.random());
+  const randomVelocity = (): number => (Math.random() - 0.5) * 15;
+  const balls: Body[] = shuffledNumbers.map((number, i) =>
+    Bodies.circle(
+      startPoint.x + (i % rowsCount) * ballSize,
+      startPoint.y + Math.floor(i / rowsCount) * ballSize,
+      ballSize / 2,
+      {
+        label: `Ball${number + 1}`,
+        restitution: 0.3,
+        frictionAir: 0,
+        render: { fillStyle: 'gray', text: `${number + 1}`, fontSize: number <= 10 ? 22 : 18 },
+        collisionFilter: combineCategory([defaultCategory, ballsCategory]),
+      },
+    ),
+  );
+  balls.forEach((ball) => Body.setVelocity(ball, { x: randomVelocity(), y: randomVelocity() }));
   return balls;
 }
 
