@@ -1,22 +1,30 @@
 <template>
-  <div class="lottery-view">
-    <div class="matter-container" ref="canvasContainer"></div>
-
-    <div class="rotate-action-container">
-      <NButton class="rotate-button" @mousedown="startRotateLeft">← Left</NButton>
-      <NButton class="rotate-button" @mousedown="grabBall">Grab</NButton>
-      <NButton class="rotate-button" @mousedown="startRotateRight">Right →</NButton>
+  <div class="lottery-container">
+    <div class="lottery-view">
+      <div class="matter-container" ref="canvasContainer"></div>
+      <div class="rotate-action-container">
+        <NSlider
+          class="rotate-speed-slider"
+          :min="-50"
+          :max="50"
+          :marks="{ 0: 'Free rotate' }"
+          v-model:value="rotateSpeed"
+          @mousedown="setRotateToZero"
+          @click="setRotateToZero"
+        />
+        <NButton class="rotate-button" @mousedown="grabBall">Grab</NButton>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, watch } from 'vue';
 
 import { Body, Vector } from 'matter-js';
 // noinspection ES6UnusedImports
-import { NButton } from 'naive-ui';
-import { Subject, interval, takeUntil, fromEvent, startWith } from 'rxjs';
+import { NButton, NSlider } from 'naive-ui';
+import { Subject, interval, takeUntil, startWith } from 'rxjs';
 
 import { autoPauseRender } from '@/auto-pause-render';
 import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
@@ -27,9 +35,11 @@ const canvasContainer = ref<HTMLDivElement>();
 
 const scenesRef = ref<Scenes>();
 const handPositionRef = ref<Vector>();
+const rotateSpeed = ref(0);
 
 const grabOneBall = useGrabOneBall();
 const destroy$ = new Subject<void>();
+const stopRotate$$ = new Subject<void>();
 
 const { engineRef, isRunning, rendererReady$$ } = useRenderer(canvasContainer);
 
@@ -51,18 +61,25 @@ onUnmounted(() => {
   destroy$.complete();
 });
 
-function startRotate(event: MouseEvent, velocity: number): void {
+watch(rotateSpeed, (speed) => setRotateInterval(speed / 200));
+
+function setRotateInterval(velocity: number): void {
+  stopRotate$$.next();
+  if (velocity === 0) {
+    return;
+  }
   interval(500)
-      .pipe(takeUntil(destroy$), takeUntil(fromEvent(event.target as HTMLElement, 'mouseup')), startWith(null))
-      .subscribe(() => rotateOctagonBound(velocity));
+    .pipe(takeUntil(destroy$), takeUntil(stopRotate$$), startWith(null))
+    .subscribe(() => rotateOctagonBound(velocity));
 }
 
-function startRotateLeft(event: MouseEvent): void {
-  startRotate(event, -0.03);
-}
-
-function startRotateRight(event: MouseEvent): void {
-  startRotate(event, 0.03);
+function setRotateToZero(event: MouseEvent): void {
+  if (!(event.target as HTMLElement).classList.contains('n-slider-mark')) {
+    return;
+  }
+  rotateSpeed.value = 0;
+  event.preventDefault();
+  event.stopPropagation();
 }
 
 function rotateOctagonBound(velocity: number): void {
@@ -79,7 +96,7 @@ function grabBall(): void {
   if (!engine || !scenes || !handPosition) {
     return;
   }
-  grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, handPosition);
+  grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
 }
 </script>
 

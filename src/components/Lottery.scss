@@ -1,15 +1,25 @@
-.lottery-view {
+.lottery-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.matter-container{
+  width: 800px;
+  height: 720px;
 }
 
 .rotate-action-container {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: space-between;
 }
 
 .rotate-label {
-  margin: 0 ;
+  margin: 0;
+}
+
+.rotate-speed-slider {
+  width: 300px;
 }
