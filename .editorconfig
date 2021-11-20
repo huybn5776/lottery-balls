@@ -1,0 +1,30 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.html]
+quote_type = double
+
+[*.css]
+quote_type = double
+
+[*.scss]
+quote_type = single
+
+[*.{js,ts}]
+quote_type = single
+spaces_around_operators = true
+
+[*.{json,yaml}]
+quote_type = double
+
+[*.md]
+max_line_length = off
+insert_final_newline = false
+trim_trailing_whitespace = false

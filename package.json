@@ -1,0 +1,46 @@
+{
+  "name": "lottery-balls",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "eslint src && vue-tsc --noEmit && vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "matter-js": "^0.17.1",
+    "naive-ui": "^2.20.3",
+    "p5": "^1.4.0",
+    "rxjs": "^7.4.0",
+    "vue": "^3.2.16"
+  },
+  "devDependencies": {
+    "@types/matter-js": "^0.17.6",
+    "@types/p5": "^1.3.1",
+    "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.3.1",
+    "@vitejs/plugin-vue": "^1.9.4",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/eslint-config-typescript": "^9.0.1",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-airbnb-typescript": "^15.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.27.0",
+    "eslint-plugin-vue": "^8.0.3",
+    "postcss-less": "^5.0.0",
+    "prettier": "^2.4.1",
+    "sass": "^1.43.4",
+    "stylelint": "^13.13.1",
+    "stylelint-config-rational-order": "^0.1.2",
+    "stylelint-config-recess-order": "^2.6.0",
+    "stylelint-config-recommended-scss": "^4.3.0",
+    "stylelint-order": "^4.1.0",
+    "stylelint-scss": "^3.21.0",
+    "typescript": "^4.4.4",
+    "vite": "^2.6.14",
+    "vue-tsc": "^0.29.5"
+  }
+}
