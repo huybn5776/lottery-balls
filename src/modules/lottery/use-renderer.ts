@@ -29,7 +29,7 @@ export function useRenderer(canvasContainer: Ref<HTMLDivElement | undefined>): {
     const width = canvasContainer.value.clientWidth || 800;
     const height = canvasContainer.value.clientHeight || 720;
 
-    rendererRef.value = await createViewRenderer(RendererType.MatterWireframes, {
+    rendererRef.value = await createViewRenderer(RendererType.P5, {
       containerElement: canvasContainer.value,
       width,
       height,

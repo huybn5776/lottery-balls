@@ -1,6 +1,7 @@
 import { Mouse, Engine } from 'matter-js';
 
 import { createMatterRenderer } from '@/modules/view-render/matter-rendrer';
+import { createP5Renderer } from '@/modules/view-render/p5-rendrer';
 
 export interface ViewRenderer {
   resume: () => void;
@@ -21,6 +22,7 @@ export interface ViewRendererConfig {
 export enum RendererType {
   MatterWireframes,
   Matter,
+  P5,
 }
 
 export function createViewRenderer(type: RendererType, config: ViewRendererConfig): Promise<ViewRenderer> {
@@ -29,6 +31,8 @@ export function createViewRenderer(type: RendererType, config: ViewRendererConfi
       return Promise.resolve(createMatterRenderer(config));
     case RendererType.Matter:
       return Promise.resolve(createMatterRenderer(config, false));
+    case RendererType.P5:
+      return createP5Renderer(config);
     default:
       throw new Error('Incorrect type');
   }

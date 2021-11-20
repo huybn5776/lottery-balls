@@ -122,7 +122,7 @@ function createBalls(x: number, y: number): Body[] {
           label: `Ball${i + 1}`,
           restitution: 0.3,
           frictionAir: 0,
-          render: { fillStyle: 'gray' },
+          render: { fillStyle: 'gray', text: `${i + 1}`, fontSize: i <= 10 ? 22 : 18 },
         },
       ),
     );
