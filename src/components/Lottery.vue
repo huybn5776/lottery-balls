@@ -3,6 +3,7 @@
     <div class="lottery-view">
       <div class="matter-container" ref="canvasContainer"></div>
       <div class="rotate-action-container">
+        <NButton class="rotate-button" @mousedown="reset">Reset</NButton>
         <NSlider
           class="rotate-speed-slider"
           :min="-50"
@@ -21,7 +22,7 @@
 <script lang="ts" setup>
 import { ref, onUnmounted, watch } from 'vue';
 
-import { Body, Vector } from 'matter-js';
+import { Body, Vector, Composite } from 'matter-js';
 // noinspection ES6UnusedImports
 import { NButton, NSlider } from 'naive-ui';
 import { Subject, interval, takeUntil, startWith } from 'rxjs';
@@ -41,7 +42,7 @@ const grabOneBall = useGrabOneBall();
 const destroy$$ = new Subject<void>();
 const stopRotate$$ = new Subject<void>();
 
-const { engineRef, isRunning, rendererReady$$ } = useRenderer(canvasContainer);
+const { rendererRef, engineRef, isRunning, rendererReady$$ } = useRenderer(canvasContainer);
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
   const running$ = autoPauseRender(renderer, destroy$$);
@@ -69,7 +70,7 @@ function setRotateInterval(velocity: number): void {
     return;
   }
   interval(500)
-    .pipe(takeUntil(destroy$), takeUntil(stopRotate$$), startWith(null))
+    .pipe(takeUntil(destroy$$), takeUntil(stopRotate$$), startWith(null))
     .subscribe(() => rotateOctagonBound(velocity));
 }
 
@@ -97,6 +98,16 @@ function grabBall(): void {
     return;
   }
   grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
+}
+
+function reset(): void {
+  if (!engineRef.value || !rendererRef.value) {
+    return;
+  }
+
+  Composite.clear(engineRef.value.world, false);
+  const { clientWidth, clientHeight } = rendererRef.value.canvas;
+  scenesRef.value = createSense(engineRef.value.world, clientWidth, clientHeight);
 }
 </script>
 
