@@ -1,5 +1,7 @@
 <template>
   <div class="lottery-container">
+    <div class="placeholder"></div>
+
     <div class="lottery-view">
       <div class="matter-container" ref="canvasContainer"></div>
       <div class="rotate-action-container">
@@ -16,6 +18,7 @@
         <NButton class="rotate-button" @mousedown="grabBall">Grab</NButton>
       </div>
     </div>
+
     <BallNumbers :ball-numbers="pickedBalls" />
   </div>
 </template>
@@ -29,6 +32,7 @@ import { NButton, NSlider } from 'naive-ui';
 import { Subject, interval, takeUntil, startWith } from 'rxjs';
 
 import { autoPauseRender } from '@/auto-pause-render';
+import BallNumbers from '@components/BallNumbers.vue';
 import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
 import { useGrabOneBall } from '@modules/lottery/use-grab-one-ball';
 import { useRenderer } from '@modules/lottery/use-renderer';
@@ -38,6 +42,7 @@ const canvasContainer = ref<HTMLDivElement>();
 const scenesRef = ref<Scenes>();
 const handPositionRef = ref<Vector>();
 const rotateSpeed = ref(0);
+const pickedBalls = ref<number[]>([]);
 
 const grabOneBall = useGrabOneBall();
 const destroy$$ = new Subject<void>();
@@ -101,6 +106,8 @@ function grabBall(): void {
   const ball$ = grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
   ball$.subscribe((ball) => {
     Composite.remove(engine.world, ball);
+    const ballNumber = +ball.label.replace('Ball', '');
+    pickedBalls.value = [ballNumber, ...pickedBalls.value].slice(0, 16);
   });
 }
 
