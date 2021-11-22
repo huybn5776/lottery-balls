@@ -16,6 +16,7 @@
         <NButton class="rotate-button" @mousedown="grabBall">Grab</NButton>
       </div>
     </div>
+    <BallNumbers :ball-numbers="pickedBalls" />
   </div>
 </template>
 
@@ -51,7 +52,7 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
   });
 
   scenesRef.value = createSense(engine.world, width, height);
-  handPositionRef.value = scenesRef.value.hand.position;
+  handPositionRef.value = { ...scenesRef.value.hand.position };
 
   const mouse = createMouseConstraint(renderer.canvas, engine);
   renderer.addMouse(mouse);
@@ -97,7 +98,10 @@ function grabBall(): void {
   if (!engine || !scenes || !handPosition) {
     return;
   }
-  grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
+  const ball$ = grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
+  ball$.subscribe((ball) => {
+    Composite.remove(engine.world, ball);
+  });
 }
 
 function reset(): void {

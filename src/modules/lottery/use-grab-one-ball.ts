@@ -1,23 +1,30 @@
 import { ref } from 'vue';
 
-import { Engine, Body, IEventCollision, Events, Composite, Vector } from 'matter-js';
-import { Observable, tap, switchMap, Subscription } from 'rxjs';
+import { Engine, Body, IEventCollision, Events, Vector } from 'matter-js';
+import { Observable, tap, switchMap, Subscription, Subject } from 'rxjs';
 
-export function useGrabOneBall(): (engine: Engine, hand: Body, fullSizeSensor: Body, handPosition: Vector) => void {
+export function useGrabOneBall(): (
+  engine: Engine,
+  hand: Body,
+  fullSizeSensor: Body,
+  handPosition: Vector,
+) => Observable<Body> {
   const lastGrabSubscription = ref<Subscription>();
 
   return (engine: Engine, hand: Body, fullSizeSensor: Body, handPosition: Vector) => {
     lastGrabSubscription.value?.unsubscribe();
+    const ball$$ = new Subject<Body>();
 
     const grab = (): void => {
-      Body.setPosition(hand, handPosition);
+      Body.setPosition(hand, {...handPosition});
       Body.setStatic(hand, false);
       Body.setAngle(hand, (Math.PI / 180) * 110);
       Body.setVelocity(hand, { x: -20, y: 70 });
     };
-    const removeBallOnTouch = (collidedBall: Body): void => {
-      Composite.remove(engine.world, collidedBall);
+    const moveBackOnTouch = (ball: Body): void => {
       Body.setVelocity(hand, { x: 0, y: -50 });
+      ball$$.next(ball);
+      ball$$.complete();
     };
     const resetHand = (): void => {
       Body.setPosition(hand, { ...handPosition });
@@ -28,10 +35,12 @@ export function useGrabOneBall(): (engine: Engine, hand: Body, fullSizeSensor: B
 
     lastGrabSubscription.value = onCollisionStart$(engine, hand)
       .pipe(
-        tap(removeBallOnTouch),
+        tap(moveBackOnTouch),
         switchMap(() => handOnMoveOutOfScreen$(engine, hand, fullSizeSensor)),
       )
       .subscribe(resetHand);
+
+    return ball$$.asObservable();
   };
 }
 
