@@ -28,19 +28,29 @@ export interface Scenes {
 }
 
 export function createSense(world: World, worldWidth: number, worldHeight: number): Scenes {
-  const centerPoint = { x: worldWidth / 2, y: worldHeight / 2 };
+  const octagonCenterPoint = { x: worldWidth * 0.32, y: worldHeight * 0.42 };
 
   const boxBound = createBoxBound(worldWidth, worldHeight);
   const { octagon, octagonConstraint } = createOctagonBound(
-    centerPoint.x,
-    centerPoint.y,
+    octagonCenterPoint.x,
+    octagonCenterPoint.y,
     Math.min(worldWidth, worldHeight),
   );
-  const balls = createBalls(centerPoint.x, centerPoint.y);
-  const { hand, handConstraint } = createHand(worldWidth * 0.8, -worldHeight / 2, worldHeight * 0.9, 50);
+  const balls = createBalls(octagonCenterPoint.x, octagonCenterPoint.y);
+  const { hand, handConstraint } = createHand(octagonCenterPoint.x * 2, -worldHeight / 2, worldHeight, 50);
   const fullSizeSensor = createFullSizeSensor(worldWidth, worldHeight);
+  const ballSlot = createBallSlot(worldWidth, worldHeight, 32);
 
-  Composite.add(world, [boxBound, octagon, octagonConstraint, ...balls, hand, handConstraint, fullSizeSensor]);
+  Composite.add(world, [
+    boxBound,
+    octagon,
+    octagonConstraint,
+    ...balls,
+    hand,
+    handConstraint,
+    fullSizeSensor,
+    ballSlot,
+  ]);
   return { octagon, hand, fullSizeSensor };
 }
 
@@ -77,8 +87,8 @@ function createBoxBound(width: number, height: number): Body {
 }
 
 function createOctagonBound(x: number, y: number, size: number): { octagon: Body; octagonConstraint: Constraint } {
-  const thickness = 30;
-  const sideLength = size * 0.31;
+  const thickness = 20;
+  const sideLength = size * 0.3;
   const bodyLength = sideLength + thickness / 2;
   const outerLength = sideLength / Math.sqrt(2);
 
@@ -120,6 +130,36 @@ function createOctagonBound(x: number, y: number, size: number): { octagon: Body
     length: 0,
   });
   return { octagon, octagonConstraint };
+}
+
+function createBallSlot(worldWidth: number, worldHeight: number, slotWidth: number): Body {
+  const thickness = 20;
+  const sideLength = 80;
+  const bodyLength = sideLength + thickness / 2;
+  const outerLength = sideLength / Math.sqrt(2);
+  const xOffset = slotWidth + thickness / 2;
+  const slotHeight = worldHeight - slotWidth * 12;
+
+  const createSide = (x: number, y: number, angle: number, length?: number): Body =>
+    Bodies.rectangle(x - xOffset, y, length || bodyLength, thickness, {
+      label: `Slot side ${angle}°`,
+      angle: (Math.PI / 180) * angle,
+      density: 1,
+      friction: 0,
+      render: { fillStyle: 'black' },
+    });
+
+  return Body.create({
+    parts: [
+      createSide(worldWidth - outerLength, sideLength / 2, 90),
+      createSide(worldWidth - outerLength / 2, sideLength + outerLength / 2, 45),
+      createSide(worldWidth, sideLength / 2 + outerLength + sideLength + slotHeight / 2, 90, bodyLength + slotHeight),
+      createSide(worldWidth - 60, worldHeight - 30, -45, worldWidth + 120),
+      createSide(worldWidth / 2 + 60, worldHeight - 30, -5, worldWidth + 120),
+    ],
+    isStatic: true,
+    collisionFilter: combineCategory([defaultCategory, boxCategory]),
+  });
 }
 
 function createBalls(x: number, y: number): Body[] {

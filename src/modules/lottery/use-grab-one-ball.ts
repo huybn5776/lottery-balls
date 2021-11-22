@@ -19,7 +19,7 @@ export function useGrabOneBall(): (
       Body.setPosition(hand, {...handPosition});
       Body.setStatic(hand, false);
       Body.setAngle(hand, (Math.PI / 180) * 110);
-      Body.setVelocity(hand, { x: -20, y: 70 });
+      Body.setVelocity(hand, { x: -20, y: 50 });
     };
     const moveBackOnTouch = (ball: Body): void => {
       Body.setVelocity(hand, { x: 0, y: -50 });

@@ -100,12 +100,18 @@ function grabBall(): void {
   const engine = engineRef.value;
   const scenes = scenesRef.value;
   const handPosition = handPositionRef.value;
-  if (!engine || !scenes || !handPosition) {
+  const renderer = rendererRef.value;
+  if (!engine || !scenes || !handPosition || !renderer) {
     return;
   }
   const ball$ = grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
+  const { clientWidth: width } = renderer.canvas;
   ball$.subscribe((ball) => {
-    Composite.remove(engine.world, ball);
+    Body.setPosition(ball, { x: width - 30, y: 30 });
+    Body.setAngularVelocity(ball, 0);
+    Body.setVelocity(ball, { x: 0, y: 0 });
+    // eslint-disable-next-line no-param-reassign
+    ball.friction = 0.05;
     const ballNumber = +ball.label.replace('Ball', '');
     pickedBalls.value = [ballNumber, ...pickedBalls.value].slice(0, 16);
   });

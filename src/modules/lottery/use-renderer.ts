@@ -26,8 +26,8 @@ export function useRenderer(canvasContainer: Ref<HTMLDivElement | undefined>): {
     engine.gravity.y = 1;
     engineRef.value = engine;
 
-    const width = canvasContainer.value.clientWidth || 800;
-    const height = canvasContainer.value.clientHeight || 720;
+    const width = canvasContainer.value.clientWidth;
+    const height = canvasContainer.value.clientHeight;
 
     rendererRef.value = await createViewRenderer(RendererType.P5, {
       containerElement: canvasContainer.value,
