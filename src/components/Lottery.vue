@@ -15,7 +15,7 @@
           @mousedown="setRotateToZero"
           @click="setRotateToZero"
         />
-        <NButton class="rotate-button" @mousedown="pickBall">Pick</NButton>
+        <NButton class="rotate-button" :disabled="pickingBall" @mousedown="pickBall">Pick</NButton>
       </div>
     </div>
 
@@ -42,6 +42,7 @@ const canvasContainer = ref<HTMLDivElement>();
 const scenesRef = ref<Scenes>();
 const initialRopePositionRef = ref<Vector>();
 const rotateSpeed = ref(0);
+const pickingBall = ref(false);
 const pickedBalls = ref<number[]>([]);
 
 const destroy$$ = new Subject<void>();
@@ -100,6 +101,10 @@ function rotateOctagonBound(velocity: number): void {
 }
 
 function pickBall(): void {
+  if (pickingBall.value) {
+    return;
+  }
+
   const engine = engineRef.value;
   const scenes = scenesRef.value;
   const ropeHandlePosition = initialRopePositionRef.value;
@@ -107,10 +112,12 @@ function pickBall(): void {
   if (!engine || !scenes || !ropeHandlePosition || !renderer) {
     return;
   }
+  pickingBall.value = true;
 
   const ball$ = clawPick(engine, scenes, ropeHandlePosition);
   const { clientWidth: width } = renderer.canvas;
   ball$.subscribe((ball) => {
+    pickingBall.value = false;
     if (ball) {
       Body.setPosition(ball, { x: width - 30, y: -30 });
       Body.setVelocity(ball, { x: 0, y: 0 });
