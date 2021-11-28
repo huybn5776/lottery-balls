@@ -1,4 +1,4 @@
-import { Observable, fromEvent, takeUntil, switchMap, timer, tap, take, Subject } from 'rxjs';
+import { Observable, fromEvent, takeUntil, switchMap, timer, tap, take, Subject, merge } from 'rxjs';
 
 import { ViewRenderer } from '@/modules/view-render/view-render';
 
@@ -27,10 +27,11 @@ export function autoPauseRender(
     ),
   );
   const resumeByMouseMove$ = fromEvent(targetElement, 'mousemove').pipe(until);
+  const resumeByKeydown$ = fromEvent(targetElement, 'keydown').pipe(until);
   const pauseByIdle$ = timer(idlePauseTime).pipe(
     until,
     takeUntil(
-      fromEvent(targetElement, 'mousemove').pipe(
+      merge(resumeByMouseMove$, resumeByKeydown$).pipe(
         take(1),
         tap(() => {
           log('idle canceled');
@@ -52,12 +53,16 @@ export function autoPauseRender(
 
   function subscribeForResume(): void {
     log('subscribeForResume');
-    resumeByMouseMove$.pipe(take(1)).subscribe(() => {
-      log('resume by mousemove');
-      renderer.resume();
-      running$$.next(true);
-      subscribeForMouseleavePause();
-    });
+    merge(
+      resumeByMouseMove$.pipe(tap(() => log('resume by mousemove'))),
+      resumeByKeydown$.pipe(tap(() => log('resume by keydown'))),
+    )
+      .pipe(take(1))
+      .subscribe(() => {
+        renderer.resume();
+        running$$.next(true);
+        subscribeForMouseleavePause();
+      });
   }
 
   function subscribeForIdlePause(): void {

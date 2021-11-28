@@ -64,6 +64,29 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
 
   const mouse = createMouseConstraint(renderer.canvas, engine);
   renderer.addMouse(mouse);
+
+  fromEvent<KeyboardEvent>(document.body, 'keydown')
+    .pipe(takeUntil(destroy$$))
+    .subscribe((event) => {
+      let handled = true;
+      switch (event.code) {
+        case 'Space':
+          pickBall();
+          break;
+        case 'ArrowLeft':
+          setRotateInterval((rotateSpeed.value -= 5));
+          break;
+        case 'ArrowRight':
+          setRotateInterval((rotateSpeed.value += 5));
+          break;
+        default:
+          handled = false;
+          break;
+      }
+      if (handled) {
+        event.preventDefault();
+      }
+    });
 });
 
 onUnmounted(() => {
