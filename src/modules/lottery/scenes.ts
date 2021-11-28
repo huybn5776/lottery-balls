@@ -183,7 +183,7 @@ function createBalls(x: number, y: number): Body[] {
         label: `Ball${number + 1}`,
         restitution: 0.3,
         frictionAir: 0,
-        render: { fillStyle: 'gray', text: `${number + 1}`, fontSize: number <= 10 ? 22 : 18 },
+        render: { fillStyle: 'gold', text: `${number + 1}`, textColor: 'black', fontSize: number <= 10 ? 22 : 18 },
         collisionFilter: combineCategory([defaultCategory, ballsCategory]),
       },
     ),

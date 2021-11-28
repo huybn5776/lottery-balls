@@ -4,6 +4,7 @@ import P5 from 'p5';
 declare module 'matter-js' {
   interface IBodyRenderOptions {
     text?: string;
+    textColor?: string;
     fontSize?: number;
   }
 }
@@ -30,7 +31,7 @@ export function drawBody(p5: P5, body: Body): void {
     p5.translate(body.position.x, body.position.y);
     p5.rotate(body.angle);
 
-    p5.fill('#ffffff');
+    p5.fill(body.render.textColor || '#ffffff');
     p5.textAlign(p5.CENTER);
     p5.text(body.render.text, 0, fontSize / 3);
     p5.pop();
