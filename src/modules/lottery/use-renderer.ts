@@ -7,7 +7,6 @@ import { ViewRenderer, createViewRenderer, RendererType } from '@modules/view-re
 
 export function useRenderer(canvasContainer: Ref<HTMLDivElement | undefined>): {
   rendererRef: Ref<ViewRenderer | undefined>;
-  isRunning: Ref<boolean>;
   rendererReady$$: Subject<{ renderer: ViewRenderer; engine: Engine; width: number; height: number }>;
   engineRef: Ref<Engine | undefined>;
 } {
@@ -15,7 +14,6 @@ export function useRenderer(canvasContainer: Ref<HTMLDivElement | undefined>): {
 
   const rendererRef = ref<ViewRenderer>();
   const engineRef = ref<Engine>();
-  const isRunning = ref(false);
 
   onMounted(async () => {
     if (!canvasContainer.value) {
@@ -39,10 +37,9 @@ export function useRenderer(canvasContainer: Ref<HTMLDivElement | undefined>): {
     rendererReady$$.next({ renderer: rendererRef.value, engine, width, height });
 
     rendererRef.value.run();
-    isRunning.value = true;
   });
 
   onUnmounted(() => rendererRef.value?.stop());
 
-  return { rendererRef, engineRef, isRunning, rendererReady$$ };
+  return { rendererRef, engineRef, rendererReady$$ };
 }

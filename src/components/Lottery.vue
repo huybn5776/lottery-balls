@@ -29,7 +29,7 @@ import { ref, onUnmounted, watch } from 'vue';
 import { Body, Vector, Composite } from 'matter-js';
 // noinspection ES6UnusedImports
 import { NButton, NSlider } from 'naive-ui';
-import { Subject, interval, takeUntil, startWith } from 'rxjs';
+import { Subject, interval, takeUntil, startWith, fromEvent, BehaviorSubject } from 'rxjs';
 
 import { autoPauseRender } from '@/auto-pause-render';
 import BallNumbers from '@components/BallNumbers.vue';
@@ -46,15 +46,16 @@ const pickedBalls = ref<number[]>([]);
 
 const grabOneBall = useGrabOneBall();
 const destroy$$ = new Subject<void>();
+const running$$ = new BehaviorSubject<boolean>(false);
 const stopRotate$$ = new Subject<void>();
 
-const { rendererRef, engineRef, isRunning, rendererReady$$ } = useRenderer(canvasContainer);
+const { rendererRef, engineRef, rendererReady$$ } = useRenderer(canvasContainer);
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
-  const running$ = autoPauseRender(renderer, destroy$$);
-  running$.subscribe((running) => {
-    isRunning.value = running;
-  });
+  running$$.next(true);
+  autoPauseRender(renderer, destroy$$)
+    .pipe(takeUntil(destroy$$))
+    .subscribe((running) => running$$.next(running));
 
   scenesRef.value = createSense(engine.world, width, height);
   handPositionRef.value = { ...scenesRef.value.hand.position };
@@ -66,6 +67,7 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
 onUnmounted(() => {
   destroy$$.next();
   destroy$$.complete();
+  running$$.next(false);
 });
 
 watch(rotateSpeed, (speed) => setRotateInterval(speed / 200));
