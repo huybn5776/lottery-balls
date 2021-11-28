@@ -51,6 +51,10 @@ export function createP5Renderer({
         p5.strokeWeight(0);
 
         drawBodies(p5, engine.world.bodies);
+        const { length } = engine.world.composites;
+        for (let i = 0; i < length; i += 1) {
+          drawBodies(p5, engine.world.composites[i].bodies);
+        }
 
         p5.fill('yellow');
         p5.circle(p5.mouseX, p5.mouseY, 10);

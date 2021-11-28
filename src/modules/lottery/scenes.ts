@@ -8,6 +8,8 @@ import {
   Engine,
   Mouse,
   MouseConstraint,
+  Composites,
+  Vector,
 } from 'matter-js';
 
 import {
@@ -15,16 +17,21 @@ import {
   boxCategory,
   octagonCategory,
   ballsCategory,
-  handCategory,
-  sensorCategory,
   combineCategory,
   mouseCategory,
+  ropeCategory,
+  clawCategory,
+  pickedBallCategory,
 } from '@modules/lottery/collision-categories';
 
 export interface Scenes {
   octagon: Body;
-  hand: Body;
-  fullSizeSensor: Body;
+  ropeChains: Composite;
+  ropeHandle: Body;
+  clawBase: Body;
+  leftClaw: Body;
+  rightClaw: Body;
+  bottomClawLimit: Body;
 }
 
 export function createSense(world: World, worldWidth: number, worldHeight: number): Scenes {
@@ -37,21 +44,15 @@ export function createSense(world: World, worldWidth: number, worldHeight: numbe
     Math.min(worldWidth, worldHeight),
   );
   const balls = createBalls(octagonCenterPoint.x, octagonCenterPoint.y);
-  const { hand, handConstraint } = createHand(octagonCenterPoint.x * 2, -worldHeight / 2, worldHeight, 50);
-  const fullSizeSensor = createFullSizeSensor(worldWidth, worldHeight);
   const ballSlot = createBallSlot(worldWidth, worldHeight, 32);
+  const ropeLength = worldHeight;
+  const { bodies, ropeHandle, ropeChains, clawBase, leftClaw, rightClaw, bottomClawLimit } = createClawWithRope(
+    { x: octagonCenterPoint.x, y: -ropeLength },
+    ropeLength,
+  );
 
-  Composite.add(world, [
-    boxBound,
-    octagon,
-    octagonConstraint,
-    ...balls,
-    hand,
-    handConstraint,
-    fullSizeSensor,
-    ballSlot,
-  ]);
-  return { octagon, hand, fullSizeSensor };
+  Composite.add(world, [boxBound, octagon, octagonConstraint, ...balls, ballSlot, ...bodies]);
+  return { octagon, ropeHandle, ropeChains, clawBase, leftClaw, rightClaw, bottomClawLimit };
 }
 
 export function createMouseConstraint(canvas: HTMLCanvasElement, engine: Engine): Mouse {
@@ -62,7 +63,10 @@ export function createMouseConstraint(canvas: HTMLCanvasElement, engine: Engine)
       angularStiffness: 0,
       render: { visible: false },
     } as Constraint & { angularStiffness: number },
-    collisionFilter: combineCategory([defaultCategory, mouseCategory], [octagonCategory, ballsCategory]),
+    collisionFilter: combineCategory(
+      [defaultCategory, mouseCategory],
+      [octagonCategory, ballsCategory, ropeCategory, clawCategory],
+    ),
   });
   Composite.add(engine.world, mouseConstraint);
   return mouse;
@@ -72,7 +76,7 @@ function createBoxBound(width: number, height: number): Body {
   const wallThickness = 100;
   const offset = wallThickness / 2;
 
-  const roof = Bodies.rectangle(width / 2, 0 - offset, width * 1.1, wallThickness, {});
+  const roof = Bodies.rectangle(width / 2 - 45, -offset, width - 90, wallThickness, {});
   const ground = Bodies.rectangle(width / 2, height + offset, width * 1.1, wallThickness, {});
   const leftWall = Bodies.rectangle(-offset, height / 2, wallThickness, height * 1.1, {});
   const rightWall = Bodies.rectangle(width + offset, height / 2, wallThickness, height * 1.1, {});
@@ -184,7 +188,10 @@ function createBalls(x: number, y: number): Body[] {
         restitution: 0.3,
         frictionAir: 0,
         render: { fillStyle: 'gold', text: `${number + 1}`, textColor: 'black', fontSize: number <= 10 ? 22 : 18 },
-        collisionFilter: combineCategory([defaultCategory, ballsCategory]),
+        collisionFilter: combineCategory(
+          [ballsCategory],
+          [mouseCategory, ballsCategory, boxCategory, octagonCategory, clawCategory],
+        ),
       },
     ),
   );
@@ -192,37 +199,184 @@ function createBalls(x: number, y: number): Body[] {
   return balls;
 }
 
-function createHand(
-  x: number,
-  y: number,
-  length: number,
-  thickness: number,
-): { hand: Body; handConstraint: Constraint } {
-  const hand = Bodies.rectangle(x, y, length, thickness, {
-    label: 'Hand',
-    angle: (Math.PI / 180) * 110,
-    render: { fillStyle: 'lightblue' },
-    chamfer: { radius: 25 },
-    isStatic: true,
-    collisionFilter: combineCategory([defaultCategory, handCategory], [ballsCategory, sensorCategory]),
-  });
-  const handConstraint = Constraint.create({
-    pointA: { x, y },
-    pointB: { x: 0, y: 0 },
-    bodyB: hand,
+function createClawWithRope(
+  position: Vector,
+  ropeLength: number,
+): {
+  bodies: (Composite | Constraint | Body)[];
+  ropeChains: Composite;
+  clawBase: Body;
+  leftClaw: Body;
+  rightClaw: Body;
+  ropeHandle: Body;
+  bottomClawLimit: Body;
+} {
+  const clawPosition = { x: position.x, y: position.y + ropeLength };
+  const { ropeHandle, ropeChains } = createRope(position, ropeLength);
+  const { bodies, clawBase, leftClaw, rightClaw, bottomClawLimit } = createClaw(clawPosition);
+
+  const ropeConstraint = Constraint.create({
+    bodyA: ropeChains.bodies[ropeChains.bodies.length - 1],
+    bodyB: clawBase,
+    pointA: { x: 0, y: 15 },
+    pointB: { x: 0, y: -10 },
     length: 0,
-    stiffness: 0.001,
   });
 
-  return { hand, handConstraint };
+  return {
+    bodies: [ropeChains, ropeConstraint, ...bodies],
+    ropeHandle,
+    ropeChains,
+    clawBase,
+    leftClaw,
+    rightClaw,
+    bottomClawLimit,
+  };
 }
 
-function createFullSizeSensor(worldWidth: number, worldHeight: number): Body {
-  return Bodies.rectangle(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, {
-    label: 'Full size sensor',
-    isSensor: true,
-    isStatic: true,
-    render: { visible: false },
-    collisionFilter: combineCategory([defaultCategory, sensorCategory]),
+function createClaw(position: Vector): {
+  bodies: (Body | Constraint)[];
+  clawBase: Body;
+  leftClaw: Body;
+  rightClaw: Body;
+  bottomClawLimit: Body;
+} {
+  const baseSize = 20;
+  const clawWidth = 50;
+  const clawDeep = 40;
+  const clawThickness = 10;
+  const clawColor = 'gainsboro';
+
+  const clawBase = Bodies.circle(position.x, position.y, baseSize, {
+    label: 'Claw base',
+    collisionFilter: combineCategory([clawCategory], [mouseCategory, ballsCategory, pickedBallCategory]),
+    render: { fillStyle: 'snow' },
   });
+
+  const clawArmXOffset = clawWidth / 2 + baseSize / 2;
+  const clawArmYOffset = baseSize / 2;
+  const clawPawXOffset = clawArmXOffset + clawWidth / 2 - clawThickness / 2;
+  const clawPawYOffset = clawArmYOffset + clawDeep / 2 - clawThickness / 2;
+
+  const createClawRect = (xOffset: number, yOffset: number, width: number, height: number): Body =>
+    Bodies.rectangle(position.x + xOffset, position.y + yOffset, width, height, {
+      chamfer: { radius: clawThickness / 2 },
+      render: { fillStyle: clawColor },
+    });
+  const combineClaw = (parts: Body[]): Body =>
+    Body.create({
+      label: 'Claw arm',
+      parts,
+      collisionFilter: combineCategory(
+        [clawCategory],
+        [mouseCategory, clawCategory, ballsCategory, pickedBallCategory],
+      ),
+      friction: 1,
+    });
+  const createClawConstraint = (claw: Body, xDirection: number): Constraint =>
+    Constraint.create({
+      bodyA: clawBase,
+      bodyB: claw,
+      pointA: { x: (xDirection * baseSize) / 2, y: baseSize / 2 },
+      pointB: { x: -xDirection * clawWidth * 0.55, y: -clawThickness * 0.75 },
+      length: 0,
+    });
+
+  const leftClawArm = createClawRect(-clawArmXOffset, clawArmYOffset, clawWidth, clawThickness);
+  const leftClawPaw = createClawRect(-clawPawXOffset, clawPawYOffset, clawThickness, clawDeep);
+  const leftClaw = combineClaw([leftClawArm, leftClawPaw]);
+  const leftClawConstraint = createClawConstraint(leftClaw, -1);
+
+  const rightClawArm = createClawRect(clawArmXOffset, clawArmYOffset, clawWidth, clawThickness);
+  const rightClawPaw = createClawRect(clawPawXOffset, clawPawYOffset, clawThickness, clawDeep);
+  const rightClaw = combineClaw([rightClawArm, rightClawPaw]);
+  const rightClawConstraint = createClawConstraint(rightClaw, 1);
+
+  const createClawLimit = (
+    yOffset: number,
+    thickness: number,
+    options: IChamferableBodyDefinition,
+  ): { bodies: (Body | Constraint)[]; clawLimit: Body } => {
+    const clawLimit = Bodies.rectangle(position.x, position.y + baseSize / 2 + yOffset, clawWidth, thickness, options);
+    const clawLimitLeftConstraint = Constraint.create({
+      bodyA: clawBase,
+      bodyB: clawLimit,
+      pointA: { x: -clawWidth / 2, y: clawLimit.position.y - clawBase.position.y },
+      pointB: { x: -clawWidth / 2, y: 0 },
+      length: 0,
+    });
+    const clawRightConstraint = Constraint.create({
+      bodyA: clawBase,
+      bodyB: clawLimit,
+      pointA: { x: clawWidth / 2, y: clawLimit.position.y - clawBase.position.y },
+      pointB: { x: clawWidth / 2, y: 0 },
+      length: 0,
+    });
+    return { clawLimit, bodies: [clawLimit, clawLimitLeftConstraint, clawRightConstraint] };
+  };
+
+  const { bodies: topClawLimitBodies } = createClawLimit(-clawThickness, clawThickness, {
+    chamfer: { radius: clawThickness / 2 },
+    label: 'Claw top limit',
+    collisionFilter: combineCategory([clawCategory], [clawCategory]),
+    render: { fillStyle: 'darkgray' },
+  });
+  const { clawLimit: bottomClawLimit, bodies: bottomClawLimitBodies } = createClawLimit(
+    clawThickness * 2,
+    clawThickness * 2,
+    {
+      label: 'Claw bottom limit',
+      collisionFilter: combineCategory([clawCategory], [clawCategory]),
+      render: { visible: false },
+    },
+  );
+
+  return {
+    bodies: [
+      leftClaw,
+      leftClawConstraint,
+      rightClaw,
+      rightClawConstraint,
+      clawBase,
+      ...topClawLimitBodies,
+      ...bottomClawLimitBodies,
+    ],
+    clawBase,
+    leftClaw,
+    rightClaw,
+    bottomClawLimit,
+  };
+}
+
+function createRope(position: Vector, length: number): { ropeChains: Composite; ropeHandle: Body } {
+  const width = 10;
+  const maxChainLength = width * 2.5;
+  const chainCount = Math.floor(length / maxChainLength);
+  const chainLength = (length / chainCount) * 1.35;
+
+  const ropeChains = Composites.stack(
+    position.x - width / 2,
+    position.y,
+    1,
+    chainCount,
+    0,
+    -chainLength * 0.3,
+    (x: number, y: number) =>
+      Bodies.rectangle(x, y, width, chainLength, {
+        collisionFilter: combineCategory([ropeCategory], [mouseCategory, ballsCategory]),
+        chamfer: { radius: width / 2 },
+        render: { fillStyle: 'dimgray' },
+      }),
+  );
+  const ropeHandle = Bodies.circle(position.x, position.y, 10, { isStatic: true });
+
+  const yOffset = 0.35;
+  Composites.chain(ropeChains, 0, yOffset, 0, -yOffset, { stiffness: 1, length: 0 });
+  const ropeTopConstraint = Constraint.create({
+    bodyA: ropeHandle,
+    bodyB: ropeChains.bodies[0],
+    pointB: { x: 0, y: -chainLength / 2 },
+  });
+  Composite.add(ropeChains, ropeTopConstraint);
+  return { ropeChains, ropeHandle };
 }

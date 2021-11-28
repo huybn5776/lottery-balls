@@ -15,7 +15,7 @@
           @mousedown="setRotateToZero"
           @click="setRotateToZero"
         />
-        <NButton class="rotate-button" @mousedown="grabBall">Grab</NButton>
+        <NButton class="rotate-button" @mousedown="pickBall">Pick</NButton>
       </div>
     </div>
 
@@ -34,22 +34,23 @@ import { Subject, interval, takeUntil, startWith, fromEvent, BehaviorSubject } f
 import { autoPauseRender } from '@/auto-pause-render';
 import BallNumbers from '@components/BallNumbers.vue';
 import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
-import { useGrabOneBall } from '@modules/lottery/use-grab-one-ball';
+import { useClawPick } from '@modules/lottery/use-claw-pick';
 import { useRenderer } from '@modules/lottery/use-renderer';
 
 const canvasContainer = ref<HTMLDivElement>();
 
 const scenesRef = ref<Scenes>();
-const handPositionRef = ref<Vector>();
+const initialRopePositionRef = ref<Vector>();
 const rotateSpeed = ref(0);
 const pickedBalls = ref<number[]>([]);
 
-const grabOneBall = useGrabOneBall();
 const destroy$$ = new Subject<void>();
 const running$$ = new BehaviorSubject<boolean>(false);
 const stopRotate$$ = new Subject<void>();
 
 const { rendererRef, engineRef, rendererReady$$ } = useRenderer(canvasContainer);
+
+const clawPick = useClawPick(running$$.asObservable());
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
   running$$.next(true);
@@ -58,7 +59,7 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
     .subscribe((running) => running$$.next(running));
 
   scenesRef.value = createSense(engine.world, width, height);
-  handPositionRef.value = { ...scenesRef.value.hand.position };
+  initialRopePositionRef.value = { ...scenesRef.value.ropeHandle.position };
 
   const mouse = createMouseConstraint(renderer.canvas, engine);
   renderer.addMouse(mouse);
@@ -98,24 +99,27 @@ function rotateOctagonBound(velocity: number): void {
   Body.setAngularVelocity(scenesRef.value.octagon, velocity);
 }
 
-function grabBall(): void {
+function pickBall(): void {
   const engine = engineRef.value;
   const scenes = scenesRef.value;
-  const handPosition = handPositionRef.value;
+  const ropeHandlePosition = initialRopePositionRef.value;
   const renderer = rendererRef.value;
-  if (!engine || !scenes || !handPosition || !renderer) {
+  if (!engine || !scenes || !ropeHandlePosition || !renderer) {
     return;
   }
-  const ball$ = grabOneBall(engine, scenes.hand, scenes.fullSizeSensor, { ...handPosition });
+
+  const ball$ = clawPick(engine, scenes, ropeHandlePosition);
   const { clientWidth: width } = renderer.canvas;
   ball$.subscribe((ball) => {
-    Body.setPosition(ball, { x: width - 30, y: 30 });
-    Body.setAngularVelocity(ball, 0);
-    Body.setVelocity(ball, { x: 0, y: 0 });
-    // eslint-disable-next-line no-param-reassign
-    ball.friction = 0.05;
-    const ballNumber = +ball.label.replace('Ball', '');
-    pickedBalls.value = [ballNumber, ...pickedBalls.value].slice(0, 16);
+    if (ball) {
+      Body.setPosition(ball, { x: width - 30, y: -30 });
+      Body.setVelocity(ball, { x: 0, y: 0 });
+      // eslint-disable-next-line no-param-reassign
+      ball.friction = 0.05;
+
+      const ballNumber = +ball.label.replace('Ball', '');
+      pickedBalls.value = [ballNumber, ...pickedBalls.value].slice(0, 16);
+    }
   });
 }
 
