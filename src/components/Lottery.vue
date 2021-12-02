@@ -142,10 +142,8 @@ function pickBall(): void {
   ball$.subscribe((ball) => {
     pickingBall.value = false;
     if (ball) {
-      Body.setPosition(ball, { x: width - 30, y: -30 });
+      Body.setPosition(ball, { x: width - 15, y: -30 });
       Body.setVelocity(ball, { x: 0, y: 0 });
-      // eslint-disable-next-line no-param-reassign
-      ball.friction = 0.05;
 
       const ballNumber = +ball.label.replace('Ball', '');
       pickedBalls.value = [ballNumber, ...pickedBalls.value].slice(0, 16);

@@ -76,7 +76,7 @@ function createBoxBound(width: number, height: number): Body {
   const wallThickness = 100;
   const offset = wallThickness / 2;
 
-  const roof = Bodies.rectangle(width / 2 - 45, -offset, width - 90, wallThickness, {});
+  const roof = Bodies.rectangle(width / 2 - 20, -offset, width - 40, wallThickness, {});
   const ground = Bodies.rectangle(width / 2, height + offset, width * 1.1, wallThickness, {});
   const leftWall = Bodies.rectangle(-offset, height / 2, wallThickness, height * 1.1, {});
   const rightWall = Bodies.rectangle(width + offset, height / 2, wallThickness, height * 1.1, {});
@@ -139,27 +139,37 @@ function createOctagonBound(x: number, y: number, size: number): { octagon: Body
 function createBallSlot(worldWidth: number, worldHeight: number, slotWidth: number): Body {
   const thickness = 20;
   const sideLength = 80;
-  const bodyLength = sideLength + thickness / 2;
-  const outerLength = sideLength / Math.sqrt(2);
   const xOffset = slotWidth + thickness / 2;
-  const slotHeight = worldHeight - slotWidth * 12;
 
-  const createSide = (x: number, y: number, angle: number, length?: number): Body =>
-    Bodies.rectangle(x - xOffset, y, length || bodyLength, thickness, {
+  const sideOptions: IChamferableBodyDefinition = { density: 1, friction: 0, render: { fillStyle: 'black' } };
+  const side = (x: number, y: number, angle: number, length: number, options?: IChamferableBodyDefinition): Body =>
+    Bodies.rectangle(x, y, length, thickness, {
+      ...sideOptions,
       label: `Slot side ${angle}°`,
       angle: (Math.PI / 180) * angle,
-      density: 1,
-      friction: 0,
-      render: { fillStyle: 'black' },
+      ...(options || {}),
+    });
+  const shortSide = (x: number, y: number, angle: number, length?: number): Body =>
+    Bodies.rectangle(x, y, length || sideLength, thickness, {
+      ...sideOptions,
+      label: `Slot ${angle}°`,
+      angle: (Math.PI / 180) * angle,
+      chamfer: { radius: thickness / 2 },
     });
 
   return Body.create({
     parts: [
-      createSide(worldWidth - outerLength, sideLength / 2, 90),
-      createSide(worldWidth - outerLength / 2, sideLength + outerLength / 2, 45),
-      createSide(worldWidth, sideLength / 2 + outerLength + sideLength + slotHeight / 2, 90, bodyLength + slotHeight),
-      createSide(worldWidth - 60, worldHeight - 30, -45, worldWidth + 120),
-      createSide(worldWidth / 2 + 60, worldHeight - 30, -5, worldWidth + 120),
+      side(worldWidth - xOffset, 160, 90, 440),
+      side(worldWidth / 2 - 90, worldHeight - 45, -8, worldWidth - 180),
+      shortSide(worldWidth + 2 - 50, worldHeight - 273 - 40, -75),
+      shortSide(worldWidth - 20 - 50, worldHeight - 218 - 40, -60),
+      shortSide(worldWidth - 55 - 50, worldHeight - 173 - 40, -45),
+      shortSide(worldWidth - 103 - 50, worldHeight - 137 - 40, -30),
+      shortSide(worldWidth + 2, worldHeight - 273, -75),
+      shortSide(worldWidth - 20, worldHeight - 218, -60),
+      shortSide(worldWidth - 55, worldHeight - 173, -45),
+      shortSide(worldWidth - 103, worldHeight - 137, -30),
+      shortSide(worldWidth - 160, worldHeight - 110, -20),
     ],
     isStatic: true,
     collisionFilter: combineCategory([defaultCategory, boxCategory]),
