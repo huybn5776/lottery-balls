@@ -75,6 +75,7 @@ export function useClawPick(
         if (ball) {
           addMaskCategory(ball, [ballsCategory, boxCategory, octagonCategory]);
           removeCategory(ball, [pickedBallCategory]);
+          removeMaskCategory(ball, [clawCategory]);
         }
         requestAnimationFrame(() => {
           ball$$.next(ball);
