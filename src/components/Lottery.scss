@@ -9,11 +9,17 @@
   height: 720px;
 }
 
-.rotate-action-container {
-  display: flex;
+.action-container {
+  display: grid;
+  grid-template-columns: 1fr max-content 1fr;
   gap: 8px;
   align-items: center;
   justify-content: space-between;
+}
+
+.right-action-container {
+  display: flex;
+  justify-content: end;
 }
 
 .rotate-label {

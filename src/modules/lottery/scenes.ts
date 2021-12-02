@@ -25,6 +25,8 @@ import {
 } from '@modules/lottery/collision-categories';
 
 export interface Scenes {
+  worldWidth: number;
+  worldHeight: number;
   octagon: Body;
   ropeChains: Composite;
   ropeHandle: Body;
@@ -32,6 +34,7 @@ export interface Scenes {
   leftClaw: Body;
   rightClaw: Body;
   bottomClawLimit: Body;
+  clawGroup: (Composite | Constraint | Body)[];
 }
 
 export function createSense(world: World, worldWidth: number, worldHeight: number): Scenes {
@@ -52,7 +55,18 @@ export function createSense(world: World, worldWidth: number, worldHeight: numbe
   );
 
   Composite.add(world, [boxBound, octagon, octagonConstraint, ...balls, ballSlot, ...bodies]);
-  return { octagon, ropeHandle, ropeChains, clawBase, leftClaw, rightClaw, bottomClawLimit };
+  return {
+    worldWidth,
+    worldHeight,
+    octagon,
+    ropeHandle,
+    ropeChains,
+    clawBase,
+    leftClaw,
+    rightClaw,
+    bottomClawLimit,
+    clawGroup: bodies,
+  };
 }
 
 export function createMouseConstraint(canvas: HTMLCanvasElement, engine: Engine): Mouse {
@@ -161,6 +175,7 @@ function createBallSlot(worldWidth: number, worldHeight: number, slotWidth: numb
     parts: [
       side(worldWidth - xOffset, 160, 90, 440),
       side(worldWidth / 2 - 90, worldHeight - 45, -8, worldWidth - 180),
+      side(worldWidth / 2 - 90, worldHeight - 25, -8, worldWidth - 180),
       shortSide(worldWidth + 2 - 50, worldHeight - 273 - 40, -75),
       shortSide(worldWidth - 20 - 50, worldHeight - 218 - 40, -60),
       shortSide(worldWidth - 55 - 50, worldHeight - 173 - 40, -45),
@@ -170,6 +185,7 @@ function createBallSlot(worldWidth: number, worldHeight: number, slotWidth: numb
       shortSide(worldWidth - 55, worldHeight - 173, -45),
       shortSide(worldWidth - 103, worldHeight - 137, -30),
       shortSide(worldWidth - 160, worldHeight - 110, -20),
+      shortSide(worldWidth - 128, worldHeight - 118, -34, sideLength * 2),
     ],
     isStatic: true,
     collisionFilter: combineCategory([defaultCategory, boxCategory]),

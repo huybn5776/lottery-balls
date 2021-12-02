@@ -9,6 +9,9 @@ export const ballsCategory = 2 ** 4;
 export const ropeCategory = 2 ** 7;
 export const clawCategory = 2 ** 8;
 export const pickedBallCategory = 2 ** 9;
+export const slotArrayCategory = 2 ** 10;
+export const transferSensorCategory = 2 ** 11;
+export const transferredBallCategory = 2 ** 12;
 
 export function combineCategory(category: number[], mask?: number[]): { category: number; mask?: number } {
   let collisionFilter: { category: number; mask?: number } = { category: mergeCategory(category) };

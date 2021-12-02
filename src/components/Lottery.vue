@@ -4,8 +4,12 @@
 
     <div class="lottery-view">
       <div class="matter-container" ref="canvasContainer"></div>
-      <div class="rotate-action-container">
-        <NButton class="rotate-button" @mousedown="reset">Reset</NButton>
+      <div class="action-container">
+        <div class="left-action-container">
+          <NButton class="rotate-button" @mousedown="reset">Reset</NButton>
+          <NButton class="rotate-button" @mousedown="pickAll">Pick all</NButton>
+        </div>
+
         <NSlider
           class="rotate-speed-slider"
           :min="-50"
@@ -15,7 +19,9 @@
           @mousedown="setRotateToZero"
           @click="setRotateToZero"
         />
-        <NButton class="rotate-button" :disabled="pickingBall" @mousedown="pickBall">Pick</NButton>
+        <div class="right-action-container">
+          <NButton class="rotate-button" :disabled="pickingBall" @mousedown="pickBall">Pick</NButton>
+        </div>
       </div>
     </div>
 
@@ -36,6 +42,7 @@ import BallNumbers from '@components/BallNumbers.vue';
 import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
 import { useClawPick } from '@modules/lottery/use-claw-pick';
 import { useRenderer } from '@modules/lottery/use-renderer';
+import { useTransferBall } from '@modules/lottery/use-transfer-ball';
 
 const canvasContainer = ref<HTMLDivElement>();
 
@@ -52,6 +59,7 @@ const stopRotate$$ = new Subject<void>();
 const { rendererRef, engineRef, rendererReady$$ } = useRenderer(canvasContainer);
 
 const clawPick = useClawPick(running$$.asObservable());
+const transferBall = useTransferBall();
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
   running$$.next(true);
@@ -159,6 +167,13 @@ function reset(): void {
   Composite.clear(engineRef.value.world, false);
   const { clientWidth, clientHeight } = rendererRef.value.canvas;
   scenesRef.value = createSense(engineRef.value.world, clientWidth, clientHeight);
+}
+
+function pickAll(): void {
+  if (!engineRef.value || !scenesRef.value) {
+    return;
+  }
+  transferBall(engineRef.value, scenesRef.value);
 }
 </script>
 
