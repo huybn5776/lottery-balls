@@ -17,6 +17,7 @@ export function useTransferBall() {
   return (engine: Engine, scenes: Scenes) => {
     const { balls, slotArray, slotSensor } = setupScenes(engine, scenes);
     const ballsCount = balls.length;
+    limitBallsVelocity(balls);
 
     let slotIndex = 0;
     const subscription = onBallReachSensor(engine, slotSensor).subscribe((ball) => {
@@ -104,6 +105,20 @@ function createSlotSensor(worldWidth: number, worldHeight: number): Body {
     isStatic: true,
     isSensor: true,
     render: { fillStyle: 'chartreuse' },
+  });
+}
+
+function limitBallsVelocity(balls: Body[]): void {
+  const maxVelocity = 20;
+  balls.forEach((ball) => {
+    const { x, y } = ball.velocity;
+    const velocity = Math.sqrt(x ** 2 + y ** 2);
+    if (velocity > maxVelocity) {
+      Body.setVelocity(ball, {
+        x: (x * maxVelocity) / velocity,
+        y: (y * maxVelocity) / velocity,
+      });
+    }
   });
 }
 
