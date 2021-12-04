@@ -8,6 +8,7 @@
         <div class="left-action-container">
           <NButton class="rotate-button" @mousedown="reset">Reset</NButton>
           <NButton class="rotate-button" @mousedown="pickAll">Pick all</NButton>
+          <SettingsModal />
         </div>
 
         <NSlider
@@ -39,10 +40,12 @@ import { Subject, interval, takeUntil, startWith, fromEvent, BehaviorSubject } f
 
 import { autoPauseRender } from '@/auto-pause-render';
 import BallNumbers from '@components/BallNumbers.vue';
+import SettingsModal from '@components/SettingsModal.vue';
 import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
 import { useClawPick } from '@modules/lottery/use-claw-pick';
 import { useRenderer } from '@modules/lottery/use-renderer';
 import { useTransferBall } from '@modules/lottery/use-transfer-ball';
+import { loadSettingsFromLocalstorage } from '@services/settings-service';
 
 const canvasContainer = ref<HTMLDivElement>();
 
@@ -173,7 +176,8 @@ function pickAll(): void {
   if (!engineRef.value || !scenesRef.value) {
     return;
   }
-  transferBall(engineRef.value, scenesRef.value, []);
+  const settings = loadSettingsFromLocalstorage();
+  transferBall(engineRef.value, scenesRef.value, settings.names || []);
 }
 </script>
 

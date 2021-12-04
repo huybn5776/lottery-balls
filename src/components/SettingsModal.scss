@@ -1,0 +1,31 @@
+.settings-card {
+  width: 72vw;
+  height: 90vh;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+}
+
+.settings-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.setting-column-title {
+  margin-bottom: 0;
+}
+
+.settings-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: end;
+}

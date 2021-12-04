@@ -12,6 +12,7 @@ import {
   Vector,
 } from 'matter-js';
 
+import { SettingsModel } from '@interfaces/settings-model';
 import {
   defaultCategory,
   boxCategory,
@@ -23,6 +24,7 @@ import {
   clawCategory,
   pickedBallCategory,
 } from '@modules/lottery/collision-categories';
+import { loadSettingsFromLocalstorage } from '@services/settings-service';
 
 export interface Scenes {
   worldWidth: number;
@@ -38,6 +40,7 @@ export interface Scenes {
 }
 
 export function createSense(world: World, worldWidth: number, worldHeight: number): Scenes {
+  const settings = loadSettingsFromLocalstorage();
   const octagonCenterPoint = { x: worldWidth * 0.32, y: worldHeight * 0.42 };
 
   const boxBound = createBoxBound(worldWidth, worldHeight);
@@ -46,7 +49,7 @@ export function createSense(world: World, worldWidth: number, worldHeight: numbe
     octagonCenterPoint.y,
     Math.min(worldWidth, worldHeight),
   );
-  const balls = createBalls(octagonCenterPoint.x, octagonCenterPoint.y);
+  const balls = createBalls(octagonCenterPoint.x, octagonCenterPoint.y, settings);
   const ballSlot = createBallSlot(worldWidth, worldHeight, 32);
   const ropeLength = worldHeight;
   const { bodies, ropeHandle, ropeChains, clawBase, leftClaw, rightClaw, bottomClawLimit } = createClawWithRope(
@@ -192,17 +195,22 @@ function createBallSlot(worldWidth: number, worldHeight: number, slotWidth: numb
   });
 }
 
-function createBalls(x: number, y: number): Body[] {
+function createBalls(x: number, y: number, settings: SettingsModel): Body[] {
   const ballSize = 30;
-  const ballsCount = 75;
-  const rowsCount = Math.ceil(Math.sqrt(ballsCount));
+  const ballNumbersRange = settings.rangeTo || 75;
+  let ballNumbers = [...Array(ballNumbersRange).keys()].map((n) => n + 1);
+  const { numbersToOmit } = settings;
+  if (numbersToOmit?.length) {
+    ballNumbers = ballNumbers.filter((n) => !numbersToOmit.includes(n));
+  }
+  const rowsCount = Math.ceil(Math.sqrt(ballNumbers.length));
 
   const startPoint = {
     x: x - (rowsCount / 2) * ballSize + ballSize / 2,
     y: y - (rowsCount / 2) * ballSize + ballSize / 2,
   };
 
-  const shuffledNumbers = [...Array(ballsCount).keys()].sort(() => 0.5 - Math.random());
+  const shuffledNumbers = ballNumbers.sort(() => 0.5 - Math.random());
   const randomVelocity = (): number => (Math.random() - 0.5) * 15;
   const balls: Body[] = shuffledNumbers.map((number, i) =>
     Bodies.circle(
@@ -210,10 +218,10 @@ function createBalls(x: number, y: number): Body[] {
       startPoint.y + Math.floor(i / rowsCount) * ballSize,
       ballSize / 2,
       {
-        label: `Ball${number + 1}`,
+        label: `Ball${number}`,
         restitution: 0.3,
         frictionAir: 0,
-        render: { fillStyle: 'gold', text: `${number + 1}`, textColor: 'black', fontSize: number <= 10 ? 22 : 18 },
+        render: { fillStyle: 'gold', text: `${number}`, textColor: 'black', fontSize: number <= 10 ? 22 : 18 },
         collisionFilter: combineCategory(
           [ballsCategory],
           [mouseCategory, ballsCategory, boxCategory, octagonCategory, clawCategory],
