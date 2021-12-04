@@ -173,7 +173,7 @@ function pickAll(): void {
   if (!engineRef.value || !scenesRef.value) {
     return;
   }
-  transferBall(engineRef.value, scenesRef.value);
+  transferBall(engineRef.value, scenesRef.value, []);
 }
 </script>
 

@@ -14,8 +14,8 @@ import {
 import { Scenes } from '@modules/lottery/scenes';
 
 export function useTransferBall() {
-  return (engine: Engine, scenes: Scenes) => {
-    const { balls, slotArray, slotSensor } = setupScenes(engine, scenes);
+  return (engine: Engine, scenes: Scenes, names: string[]) => {
+    const { balls, slotArray, slotSensor } = setupScenes(engine, scenes, names);
     const ballsCount = balls.length;
     limitBallsVelocity(balls);
 
@@ -46,7 +46,11 @@ export function useTransferBall() {
   };
 }
 
-function setupScenes(engine: Engine, scenes: Scenes): { balls: Body[]; slotArray: Composite; slotSensor: Body } {
+function setupScenes(
+  engine: Engine,
+  scenes: Scenes,
+  names: string[],
+): { balls: Body[]; slotArray: Composite; slotSensor: Body } {
   const { worldWidth, worldHeight } = scenes;
   const balls = engine.world.bodies.filter((body) => body.label.startsWith('Ball'));
   balls.forEach((ball) => {
@@ -60,7 +64,8 @@ function setupScenes(engine: Engine, scenes: Scenes): { balls: Body[]; slotArray
 
   const slotArray = createSlotArray(worldWidth, worldHeight, balls.length);
   const slotSensor = createSlotSensor(worldWidth, worldHeight);
-  Composite.add(engine.world, [slotArray, slotSensor]);
+  const slotLabels = createSlotLabels(slotArray, names);
+  Composite.add(engine.world, [slotArray, slotSensor, ...slotLabels]);
 
   return { balls, slotArray, slotSensor };
 }
@@ -70,7 +75,7 @@ function createSlotArray(worldWidth: number, worldHeight: number, slotCount: num
   const rows = Math.ceil(slotCount / columns);
   const slotWidth = 40;
   const slotHeight = 10;
-  const slotXGap = 20;
+  const slotXGap = 30;
   const slotYGap = 70;
   const slotThickness = 5;
 
@@ -94,6 +99,31 @@ function createSlotArray(worldWidth: number, worldHeight: number, slotCount: num
       });
     },
   );
+}
+
+function createSlotLabels(slotArray: Composite, names: string[]): Body[] {
+  const slotsCount = slotArray.bodies.length;
+  const labels: Body[] = [];
+  for (let i = 0; i < slotsCount; i += 10) {
+    const slot = slotArray.bodies[i];
+    labels.push(
+      Bodies.rectangle(slot.position.x - 35, slot.position.y - 15, 0, 0, {
+        render: { text: `${i / 10 || '-'}`, fontSize: 22 },
+        isStatic: true,
+      }),
+    );
+  }
+
+  for (let i = 0; i < names.length && i < slotsCount; i += 1) {
+    const slot = slotArray.bodies[i];
+    labels.push(
+      Bodies.rectangle(slot.position.x, slot.position.y + 20, 0, 0, {
+        render: { text: names[i], fontSize: 20 },
+        isStatic: true,
+      }),
+    );
+  }
+  return labels;
 }
 
 function createSlotSensor(worldWidth: number, worldHeight: number): Body {
