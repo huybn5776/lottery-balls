@@ -8,6 +8,7 @@
         <div class="left-action-container">
           <NButton class="rotate-button" @mousedown="reset">Reset</NButton>
           <NButton class="rotate-button" @mousedown="pickAll">Pick all</NButton>
+          <NButton class="rotate-button" @mousedown="toggleFullScreen">Fullscreen</NButton>
           <SettingsModal />
         </div>
 
@@ -182,6 +183,14 @@ function pickAll(): void {
   }
   const settings = loadSettingsFromLocalstorage();
   transferBall(engineRef.value, scenesRef.value, settings.names || []);
+}
+
+function toggleFullScreen(): void {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.documentElement.requestFullscreen();
+  }
 }
 </script>
 
