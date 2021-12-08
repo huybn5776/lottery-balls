@@ -170,6 +170,8 @@ function reset(): void {
   Composite.clear(engineRef.value.world, false);
   const { clientWidth, clientHeight } = rendererRef.value.canvas;
   scenesRef.value = createSense(engineRef.value.world, clientWidth, clientHeight);
+  const mouse = createMouseConstraint(rendererRef.value.canvas, engineRef.value);
+  rendererRef.value.addMouse(mouse);
 }
 
 function pickAll(): void {
