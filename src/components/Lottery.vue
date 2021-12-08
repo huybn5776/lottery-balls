@@ -172,6 +172,8 @@ function reset(): void {
   scenesRef.value = createSense(engineRef.value.world, clientWidth, clientHeight);
   const mouse = createMouseConstraint(rendererRef.value.canvas, engineRef.value);
   rendererRef.value.addMouse(mouse);
+
+  pickedBalls.value = [];
 }
 
 function pickAll(): void {
