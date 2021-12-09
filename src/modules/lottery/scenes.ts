@@ -197,31 +197,26 @@ function createBallSlot(worldWidth: number, worldHeight: number, slotWidth: numb
 
 function createBalls(x: number, y: number, settings: SettingsModel): Body[] {
   const ballSize = 30;
-  const ballNumbersRange = settings.rangeTo || 75;
-  let ballNumbers = [...Array(ballNumbersRange).keys()].map((n) => n + 1);
-  const { numbersToOmit } = settings;
-  if (numbersToOmit?.length) {
-    ballNumbers = ballNumbers.filter((n) => !numbersToOmit.includes(n));
-  }
-  const rowsCount = Math.ceil(Math.sqrt(ballNumbers.length));
+  const ballLabels = getBallLabels(settings);
+  const rowsCount = Math.ceil(Math.sqrt(ballLabels.length));
 
   const startPoint = {
     x: x - (rowsCount / 2) * ballSize + ballSize / 2,
     y: y - (rowsCount / 2) * ballSize + ballSize / 2,
   };
 
-  const shuffledNumbers = ballNumbers.sort(() => 0.5 - Math.random());
+  const shuffledNumbers = ballLabels.sort(() => 0.5 - Math.random());
   const randomVelocity = (): number => (Math.random() - 0.5) * 15;
-  const balls: Body[] = shuffledNumbers.map((number, i) =>
+  const balls: Body[] = shuffledNumbers.map((label, i) =>
     Bodies.circle(
       startPoint.x + (i % rowsCount) * ballSize,
       startPoint.y + Math.floor(i / rowsCount) * ballSize,
       ballSize / 2,
       {
-        label: `Ball${number}`,
+        label: `Ball-${label}`,
         restitution: 0.3,
         frictionAir: 0,
-        render: { fillStyle: 'gold', text: `${number}`, textColor: 'black', fontSize: number <= 10 ? 22 : 18 },
+        render: { fillStyle: 'gold', text: `${label}`, textColor: 'black', fontSize: label.length <= 1 ? 22 : 18 },
         collisionFilter: combineCategory(
           [ballsCategory],
           [mouseCategory, ballsCategory, boxCategory, octagonCategory, clawCategory],
@@ -231,6 +226,25 @@ function createBalls(x: number, y: number, settings: SettingsModel): Body[] {
   );
   balls.forEach((ball) => Body.setVelocity(ball, { x: randomVelocity(), y: randomVelocity() }));
   return balls;
+}
+
+function getBallLabels(settings: SettingsModel): string[] {
+  const mode = settings.ballLabelMode || 'range';
+  if (mode === 'range') {
+    const ballNumbersRange = settings.rangeTo || 75;
+    let ballNumbers = [...Array(ballNumbersRange).keys()].map((n) => n + 1);
+    const { numbersToOmit } = settings;
+    if (numbersToOmit?.length) {
+      ballNumbers = ballNumbers.filter((n) => !numbersToOmit.includes(n));
+    }
+    return ballNumbers.map((n) => `${n}`);
+  }
+
+  if (mode === 'entries') {
+    return settings.ballLabels || [];
+  }
+
+  throw new Error(`Invalid ball label mode '${mode}'`);
 }
 
 function createClawWithRope(

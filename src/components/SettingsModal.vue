@@ -8,17 +8,34 @@
 
       <div class="settings-content">
         <div class="settings-column">
-          <h3 class="setting-column-title">Numbers mode</h3>
+          <h3 class="setting-column-title">Ball label</h3>
 
-          <label>
-            Range to:
-            <NInput v-model:value="rangeTo" :input-props="{ type: 'number' }" placeholder="From 1 to..." />
-          </label>
+          <div class="setting-row">
+            <p class="setting-text">Mode:</p>
+            <NRadioGroup v-model:value="ballLabelMode">
+              <NRadio value="range">Number range</NRadio>
+              <NRadio value="entries">Entries</NRadio>
+            </NRadioGroup>
+          </div>
 
-          <label class="setting-textarea-container">
-            Omit numbers:
-            <NInput v-model:value="numbersToOmit" type="textarea" placeholder="Numbers to omit" :resizable="false" />
-          </label>
+          <slot v-if="ballLabelMode === 'range'">
+            <label>
+              Range to:
+              <NInput v-model:value="rangeTo" :input-props="{ type: 'number' }" placeholder="From 1 to..." />
+            </label>
+
+            <label class="setting-textarea-container">
+              Omit numbers:
+              <NInput v-model:value="numbersToOmit" type="textarea" placeholder="Numbers to omit" :resizable="false" />
+            </label>
+          </slot>
+
+          <slot v-else-if="ballLabelMode === 'entries'">
+            <label class="setting-textarea-container">
+              Entries:
+              <NInput v-model:value="ballLabels" type="textarea" placeholder="Ball labels" :resizable="false" />
+            </label>
+          </slot>
         </div>
         <div class="settings-column">
           <h3 class="setting-column-title">Gift exchange</h3>
@@ -40,14 +57,9 @@
 import { ref, watch } from 'vue';
 
 // noinspection ES6UnusedImports
-import { NButton, NCard, NInput, NModal, NRadioGroup, NRadio } from 'naive-ui';
+import { NButton, NInput, NModal, NRadioGroup, NRadio } from 'naive-ui';
 
 import { loadSettingsFromLocalstorage, saveSettingsToLocalstorage } from '@services/settings-service';
-
-const numbersModes = [
-  { value: 'range', label: 'Range' },
-  { value: 'entries', label: 'Entries' },
-];
 
 const props = defineProps<{ modalVisible?: boolean }>();
 const emits = defineEmits<{ (modalVisible: 'update:modalVisible', value: boolean): void }>();
@@ -55,8 +67,9 @@ const emits = defineEmits<{ (modalVisible: 'update:modalVisible', value: boolean
 const showModal = ref(false);
 const rangeTo = ref('75');
 const numbersToOmit = ref('');
+const ballLabels = ref('');
 const names = ref('');
-const numbersMode = ref(numbersModes[0].value);
+const ballLabelMode = ref('range');
 
 watch(
   () => props.modalVisible,
@@ -76,23 +89,29 @@ watch(
 
 function loadSettings(): void {
   const settings = loadSettingsFromLocalstorage();
+  ballLabelMode.value = settings.ballLabelMode || ballLabelMode.value;
   rangeTo.value = `${settings.rangeTo ?? rangeTo.value}`;
   numbersToOmit.value = settings.numbersToOmit?.join('\n') ?? numbersToOmit.value;
+  ballLabels.value = settings.ballLabels?.join('\n') ?? ballLabels.value;
   names.value = settings.names?.join('\n') ?? numbersToOmit.value;
 }
 
 function saveSettings(): void {
   const settings = {
+    ballLabelMode: ballLabelMode.value,
     rangeTo: +rangeTo.value,
-    numbersToOmit: numbersToOmit.value
-      .split('\n')
-      .filter((n) => n)
+    numbersToOmit: splitTextareaString(numbersToOmit.value)
       .map((n) => +n)
       .filter((n) => !Number.isNaN(n)),
+    ballLabels: splitTextareaString(ballLabels.value),
     names: names.value.split('\n').map((n) => n.trim()),
   };
   saveSettingsToLocalstorage(settings);
   showModal.value = false;
+}
+
+function splitTextareaString(text: string): string[] {
+  return text.split('\n').filter((n) => n);
 }
 </script>
 

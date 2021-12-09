@@ -54,7 +54,7 @@ const scenesRef = ref<Scenes>();
 const initialRopePositionRef = ref<Vector>();
 const rotateSpeed = ref(0);
 const pickingBall = ref(false);
-const pickedBalls = ref<number[]>([]);
+const pickedBalls = ref<string[]>([]);
 
 const modalVisible = ref<boolean>(false);
 
@@ -162,8 +162,8 @@ function pickBall(): void {
       Body.setPosition(ball, { x: width - 15, y: -30 });
       Body.setVelocity(ball, { x: 0, y: 0 });
 
-      const ballNumber = +ball.label.replace('Ball', '');
-      pickedBalls.value = [ballNumber, ...pickedBalls.value].slice(0, 16);
+      const ballLabel = ball.label.replace('Ball-', '');
+      pickedBalls.value = [ballLabel, ...pickedBalls.value].slice(0, 16);
     }
   });
 }

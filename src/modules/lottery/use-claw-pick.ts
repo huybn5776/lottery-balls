@@ -196,7 +196,7 @@ function onClawCollisionBall(engine: Engine, scenes: Scenes): Observable<Body> {
   return new Observable<Body>((subscriber) => {
     const onCollision = (event: IEventCollision<Engine>): void => {
       const idMatch = (body: Body): boolean => clawIdList.includes(body.id);
-      const labelMatch = (body: Body): boolean => body.label.startsWith('Ball');
+      const labelMatch = (body: Body): boolean => body.label.startsWith('Ball-');
 
       const matchedPair = event.pairs.find(
         ({ bodyA, bodyB }) => (idMatch(bodyA) || idMatch(bodyB)) && (labelMatch(bodyA) || labelMatch(bodyB)),
