@@ -9,7 +9,7 @@
           <NButton class="rotate-button" @mousedown="reset">Reset</NButton>
           <NButton class="rotate-button" @mousedown="pickAll">Pick all</NButton>
           <NButton class="rotate-button" @mousedown="toggleFullScreen">Fullscreen</NButton>
-          <SettingsModal />
+          <SettingsModal v-model:modalVisible="modalVisible" />
         </div>
 
         <NSlider
@@ -37,7 +37,7 @@ import { ref, onUnmounted, watch } from 'vue';
 import { Body, Vector, Composite } from 'matter-js';
 // noinspection ES6UnusedImports
 import { NButton, NSlider } from 'naive-ui';
-import { Subject, interval, takeUntil, startWith, fromEvent, BehaviorSubject } from 'rxjs';
+import { Subject, interval, takeUntil, startWith, fromEvent, BehaviorSubject, filter } from 'rxjs';
 
 import { autoPauseRender } from '@/auto-pause-render';
 import BallNumbers from '@components/BallNumbers.vue';
@@ -55,6 +55,8 @@ const initialRopePositionRef = ref<Vector>();
 const rotateSpeed = ref(0);
 const pickingBall = ref(false);
 const pickedBalls = ref<number[]>([]);
+
+const modalVisible = ref<boolean>(false);
 
 const destroy$$ = new Subject<void>();
 const running$$ = new BehaviorSubject<boolean>(false);
@@ -78,7 +80,10 @@ rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
   renderer.addMouse(mouse);
 
   fromEvent<KeyboardEvent>(document.body, 'keydown')
-    .pipe(takeUntil(destroy$$))
+    .pipe(
+      takeUntil(destroy$$),
+      filter(() => !modalVisible.value),
+    )
     .subscribe((event) => {
       let handled = true;
       switch (event.code) {

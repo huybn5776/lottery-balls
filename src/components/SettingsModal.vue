@@ -46,14 +46,28 @@ import { loadSettingsFromLocalstorage, saveSettingsToLocalstorage } from '@servi
 
 const textareaAutosize = { minRows: 3, maxRows: 20 };
 
+const props = defineProps<{ modalVisible?: boolean }>();
+const emits = defineEmits<{ (modalVisible: 'update:modalVisible', value: boolean): void }>();
+
 const showModal = ref(false);
 const rangeTo = ref('75');
 const numbersToOmit = ref('');
 const names = ref('');
 
 watch(
+  () => props.modalVisible,
+  (visible) => {
+    showModal.value = !!visible;
+  },
+);
+watch(
   () => showModal.value,
-  (show) => show && loadSettings(),
+  (show) => {
+    if (show) {
+      loadSettings();
+    }
+    emits('update:modalVisible', show);
+  },
 );
 
 function loadSettings(): void {
