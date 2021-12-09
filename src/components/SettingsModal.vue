@@ -1,38 +1,38 @@
 <template>
   <NButton @click="showModal = true">Settings</NButton>
   <NModal v-model:show="showModal">
-    <NCard class="settings-card" title="Settings" :bordered="false" size="huge">
-      <div class="settings-layout">
-        <div class="settings-content">
-          <div class="settings-column">
-            <h3 class="setting-column-title">Numbers</h3>
+    <div class="settings-layout">
+      <div class="setting-header">
+        <h1 class="setting-title">Settings</h1>
+      </div>
 
-            <label>
-              Range to:
-              <NInput v-model:value="rangeTo" :input-props="{ type: 'number' }" placeholder="From 1 to..." />
-            </label>
+      <div class="settings-content">
+        <div class="settings-column">
+          <h3 class="setting-column-title">Numbers mode</h3>
 
-            <label>
-              Omit numbers:
-              <NInput
-                v-model:value="numbersToOmit"
-                type="textarea"
-                placeholder="Numbers to omit"
-                :autosize="textareaAutosize"
-              />
-            </label>
-          </div>
-          <div class="settings-column">
-            <h3 class="setting-column-title">Names</h3>
-            <NInput v-model:value="names" type="textarea" placeholder="Names" :autosize="textareaAutosize" />
-          </div>
+          <label>
+            Range to:
+            <NInput v-model:value="rangeTo" :input-props="{ type: 'number' }" placeholder="From 1 to..." />
+          </label>
+
+          <label class="setting-textarea-container">
+            Omit numbers:
+            <NInput v-model:value="numbersToOmit" type="textarea" placeholder="Numbers to omit" :resizable="false" />
+          </label>
         </div>
-
-        <div class="settings-footer">
-          <NButton class="setting-save-button" @click="saveSettings">Save</NButton>
+        <div class="settings-column">
+          <h3 class="setting-column-title">Gift exchange</h3>
+          <label class="setting-textarea-container">
+            Names:
+            <NInput v-model:value="names" type="textarea" placeholder="Names" :resizable="false" />
+          </label>
         </div>
       </div>
-    </NCard>
+
+      <div class="settings-footer">
+        <NButton class="setting-save-button" @click="saveSettings">Save</NButton>
+      </div>
+    </div>
   </NModal>
 </template>
 
@@ -40,11 +40,14 @@
 import { ref, watch } from 'vue';
 
 // noinspection ES6UnusedImports
-import { NButton, NCard, NInput, NModal } from 'naive-ui';
+import { NButton, NCard, NInput, NModal, NRadioGroup, NRadio } from 'naive-ui';
 
 import { loadSettingsFromLocalstorage, saveSettingsToLocalstorage } from '@services/settings-service';
 
-const textareaAutosize = { minRows: 3, maxRows: 20 };
+const numbersModes = [
+  { value: 'range', label: 'Range' },
+  { value: 'entries', label: 'Entries' },
+];
 
 const props = defineProps<{ modalVisible?: boolean }>();
 const emits = defineEmits<{ (modalVisible: 'update:modalVisible', value: boolean): void }>();
@@ -53,6 +56,7 @@ const showModal = ref(false);
 const rangeTo = ref('75');
 const numbersToOmit = ref('');
 const names = ref('');
+const numbersMode = ref(numbersModes[0].value);
 
 watch(
   () => props.modalVisible,
