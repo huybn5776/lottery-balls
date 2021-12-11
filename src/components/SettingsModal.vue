@@ -47,7 +47,8 @@
       </div>
 
       <div class="settings-footer">
-        <NButton class="setting-save-button" @click="saveSettings">Save</NButton>
+        <NButton @click="showModal = false">Cancel</NButton>
+        <NButton type="primary" @click="saveSettings">Save</NButton>
       </div>
     </div>
   </NModal>
