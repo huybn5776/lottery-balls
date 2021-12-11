@@ -112,7 +112,7 @@ onUnmounted(() => {
   running$$.next(false);
 });
 
-watch(rotateSpeed, (speed) => setRotateInterval(speed / 200));
+watch(rotateSpeed, (speed) => setRotateInterval(speed / 300));
 
 function setRotateInterval(velocity: number): void {
   stopRotate$$.next();
