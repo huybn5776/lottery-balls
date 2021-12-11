@@ -3,6 +3,7 @@
   grid-template-rows: auto 1fr auto;
   gap: 16px;
   width: 72vw;
+  max-width: 600px;
   height: 90vh;
   padding: 16px 24px;
   background-color: #2c2c32;
@@ -19,15 +20,15 @@
 
 .settings-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-rows: auto 1fr;
+  height: 100%;
 }
 
 .setting-column-title {
   margin-bottom: 0;
 }
 
-.settings-column {
+.settings-tab {
   display: flex;
   flex-direction: column;
   gap: 16px;

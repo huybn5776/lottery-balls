@@ -6,10 +6,8 @@
         <h1 class="setting-title">Settings</h1>
       </div>
 
-      <div class="settings-content">
-        <div class="settings-column">
-          <h3 class="setting-column-title">Ball label</h3>
-
+      <NTabs class="settings-content" type="line">
+        <NTabPane class="settings-tab" name="ballLabel" tab="Ball Label">
           <div class="setting-row">
             <p class="setting-text">Mode:</p>
             <NRadioGroup v-model:value="ballLabelMode">
@@ -38,16 +36,16 @@
               <span class="setting-textarea-note">Total balls: {{ totalBalls }}</span>
             </label>
           </slot>
-        </div>
-        <div class="settings-column">
-          <h3 class="setting-column-title">Gift exchange</h3>
+        </NTabPane>
+
+        <NTabPane name="giftExchange" tab="Gift exchange">
           <label class="setting-textarea-container">
             Names:
             <NInput v-model:value="names" type="textarea" placeholder="Names" :resizable="false" />
             <span class="setting-textarea-note">Total names: {{ totalNames }}</span>
           </label>
-        </div>
-      </div>
+        </NTabPane>
+      </NTabs>
 
       <div class="settings-footer">
         <NButton @click="showModal = false">Cancel</NButton>
@@ -61,7 +59,7 @@
 import { ref, watch, onUnmounted } from 'vue';
 
 // noinspection ES6UnusedImports
-import { NButton, NInput, NModal, NRadioGroup, NRadio } from 'naive-ui';
+import { NButton, NInput, NTabs, NTabPane, NModal, NRadioGroup, NRadio } from 'naive-ui';
 import { Subscription, fromEvent, filter } from 'rxjs';
 
 import { useDebouncedCompute } from '@compositions/use-debounced-compute';
