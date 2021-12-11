@@ -27,6 +27,7 @@
             <label class="setting-textarea-container">
               Omit numbers:
               <NInput v-model:value="numbersToOmit" type="textarea" placeholder="Numbers to omit" :resizable="false" />
+              <span class="setting-textarea-note">Total balls: {{ totalBalls }}</span>
             </label>
           </slot>
 
@@ -34,6 +35,7 @@
             <label class="setting-textarea-container">
               Entries:
               <NInput v-model:value="ballLabels" type="textarea" placeholder="Ball labels" :resizable="false" />
+              <span class="setting-textarea-note">Total balls: {{ totalBalls }}</span>
             </label>
           </slot>
         </div>
@@ -42,6 +44,7 @@
           <label class="setting-textarea-container">
             Names:
             <NInput v-model:value="names" type="textarea" placeholder="Names" :resizable="false" />
+            <span class="setting-textarea-note">Total names: {{ totalNames }}</span>
           </label>
         </div>
       </div>
@@ -60,6 +63,7 @@ import { ref, watch } from 'vue';
 // noinspection ES6UnusedImports
 import { NButton, NInput, NModal, NRadioGroup, NRadio } from 'naive-ui';
 
+import { useDebouncedCompute } from '@compositions/use-debounced-compute';
 import { loadSettingsFromLocalstorage, saveSettingsToLocalstorage } from '@services/settings-service';
 
 const props = defineProps<{ modalVisible?: boolean }>();
@@ -71,6 +75,17 @@ const numbersToOmit = ref('');
 const ballLabels = ref('');
 const names = ref('');
 const ballLabelMode = ref('range');
+
+const totalBalls = useDebouncedCompute({ debounced: [numbersToOmit, ballLabels], immediately: [ballLabelMode] }, () => {
+  if (ballLabelMode.value === 'range') {
+    return +rangeTo.value - splitTextareaString(numbersToOmit.value).length;
+  }
+  if (ballLabelMode.value === 'entries') {
+    return splitTextareaString(ballLabels.value).length;
+  }
+  return 0;
+});
+const totalNames = useDebouncedCompute([names], () => splitTextareaString(names.value).length);
 
 watch(
   () => props.modalVisible,

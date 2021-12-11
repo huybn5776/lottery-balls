@@ -35,8 +35,16 @@
 
 .setting-textarea-container {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   height: 100%;
+}
+
+.setting-textarea-note {
+  display: flex;
+  justify-content: end;
+  margin: 4px 0 0;
+  color: white;
+  font-size: 12px;
 }
 
 .settings-footer {
