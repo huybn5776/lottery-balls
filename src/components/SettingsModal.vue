@@ -58,10 +58,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 
 // noinspection ES6UnusedImports
 import { NButton, NInput, NModal, NRadioGroup, NRadio } from 'naive-ui';
+import { Subscription, fromEvent, filter } from 'rxjs';
 
 import { useDebouncedCompute } from '@compositions/use-debounced-compute';
 import { loadSettingsFromLocalstorage, saveSettingsToLocalstorage } from '@services/settings-service';
@@ -75,6 +76,7 @@ const numbersToOmit = ref('');
 const ballLabels = ref('');
 const names = ref('');
 const ballLabelMode = ref('range');
+const hotkeySubscription = ref<Subscription>();
 
 const totalBalls = useDebouncedCompute({ debounced: [numbersToOmit, ballLabels], immediately: [ballLabelMode] }, () => {
   if (ballLabelMode.value === 'range') {
@@ -98,10 +100,15 @@ watch(
   (show) => {
     if (show) {
       loadSettings();
+      registerHotkey();
+    } else {
+      unregisterHotkey();
     }
     emits('update:modalVisible', show);
   },
 );
+
+onUnmounted(() => unregisterHotkey());
 
 function loadSettings(): void {
   const settings = loadSettingsFromLocalstorage();
@@ -110,6 +117,16 @@ function loadSettings(): void {
   numbersToOmit.value = settings.numbersToOmit?.join('\n') ?? numbersToOmit.value;
   ballLabels.value = settings.ballLabels?.join('\n') ?? ballLabels.value;
   names.value = settings.names?.join('\n') ?? numbersToOmit.value;
+}
+
+function registerHotkey(): void {
+  hotkeySubscription.value = fromEvent<KeyboardEvent>(document.body, 'keydown')
+    .pipe(filter((event) => (event.metaKey || event.ctrlKey) && event.key === 'Enter'))
+    .subscribe(saveSettings);
+}
+
+function unregisterHotkey(): void {
+  hotkeySubscription.value?.unsubscribe();
 }
 
 function saveSettings(): void {
