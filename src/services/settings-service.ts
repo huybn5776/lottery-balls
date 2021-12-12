@@ -16,11 +16,18 @@ export function loadSettingsFromLocalstorage(): SettingsModel {
 }
 
 export function saveSettingsToLocalstorage(settings: SettingsModel): void {
-  localStorage.setItem('ballLabelMode', `${settings.ballLabelMode}`);
-  localStorage.setItem('rangeTo', `${settings.rangeTo}`);
-  localStorage.setItem('numbersToOmit', `${settings.numbersToOmit?.join(',')}`);
-  localStorage.setItem('ballLabels', `${settings.ballLabels?.join(',')}`);
-  localStorage.setItem('names', `${settings.names?.join(',')}`);
+  setItem('ballLabelMode', settings.ballLabelMode);
+  setItem('rangeTo', settings.rangeTo);
+  setItem('numbersToOmit', settings.numbersToOmit?.join(','));
+  setItem('ballLabels', settings.ballLabels?.join(','));
+  setItem('names', settings.names?.join(','));
+}
+
+function setItem(key: string, value: unknown): void {
+  if (value === undefined || value === '') {
+    return;
+  }
+  localStorage.setItem(key, `${value}`);
 }
 
 function getNumberItem(key: string): number | undefined {
