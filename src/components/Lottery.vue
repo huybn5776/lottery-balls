@@ -41,7 +41,7 @@ import { Subject, interval, takeUntil, startWith, fromEvent, BehaviorSubject, fi
 
 import { autoPauseRender } from '@/auto-pause-render';
 import BallNumbers from '@components/BallNumbers.vue';
-import SettingsModal from '@components/SettingsModal.vue';
+import SettingsModal from '@components/settings/SettingsModal.vue';
 import { createSense, createMouseConstraint, Scenes } from '@modules/lottery/scenes';
 import { useClawPick } from '@modules/lottery/use-claw-pick';
 import { useRenderer } from '@modules/lottery/use-renderer';
