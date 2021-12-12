@@ -81,6 +81,7 @@ module.exports = {
     'no-console': 1,
     'no-continue': 0,
     'no-multiple-empty-lines': 2,
+    'no-return-assign': [2, 'except-parens'],
     'no-useless-return': 1,
     'prettier/prettier': 0,
     quotes: ['error', 'single', { allowTemplateLiterals: true }],
