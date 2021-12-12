@@ -12,6 +12,7 @@ export function loadSettingsFromLocalstorage(): SettingsModel {
       .filter(Number.isInteger),
     ballLabels: getArrayItem('ballLabels'),
     names: getArrayItem('names'),
+    autoPause: getBooleanItem('autoPause'),
   };
 }
 
@@ -21,6 +22,7 @@ export function saveSettingsToLocalstorage(settings: SettingsModel): void {
   setItem('numbersToOmit', settings.numbersToOmit?.join(','));
   setItem('ballLabels', settings.ballLabels?.join(','));
   setItem('names', settings.names?.join(','));
+  setItem('autoPause', settings.autoPause);
 }
 
 function setItem(key: string, value: unknown): void {
@@ -42,4 +44,9 @@ function getArrayItem(key: string): string[] | undefined {
     ?.split(',')
     .map((v) => v.trim())
     .filter((v) => !!v);
+}
+
+function getBooleanItem(key: string): boolean | undefined {
+  const value = localStorage.getItem(key);
+  return value === null ? undefined : localStorage.getItem(key) === 'true';
 }

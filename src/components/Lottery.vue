@@ -68,10 +68,14 @@ const clawPick = useClawPick(running$$.asObservable());
 const transferBall = useTransferBall();
 
 rendererReady$$.subscribe(({ renderer, engine, width, height }) => {
+  const settings = loadSettingsFromLocalstorage();
+
   running$$.next(true);
-  autoPauseRender(renderer, destroy$$)
-    .pipe(takeUntil(destroy$$))
-    .subscribe((running) => running$$.next(running));
+  if (settings.autoPause) {
+    autoPauseRender(renderer, destroy$$)
+      .pipe(takeUntil(destroy$$))
+      .subscribe((running) => running$$.next(running));
+  }
 
   scenesRef.value = createSense(engine.world, width, height);
   initialRopePositionRef.value = { ...scenesRef.value.ropeHandle.position };

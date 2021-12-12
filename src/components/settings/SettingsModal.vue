@@ -14,6 +14,10 @@
         <NTabPane name="giftExchange" tab="Gift exchange">
           <GiftExchangeSettingTab :settings="settingsRef" />
         </NTabPane>
+
+        <NTabPane class="settings-tab" name="misc" tab="Misc">
+          <MiscSettingTab :settings="settingsRef" />
+        </NTabPane>
       </NTabs>
 
       <div class="settings-footer">
@@ -33,6 +37,7 @@ import { Subscription, fromEvent, filter } from 'rxjs';
 
 import BallLabelSettingTab from '@components/settings/BallLabelSettingTab.vue';
 import GiftExchangeSettingTab from '@components/settings/GiftExchangeSettingTab.vue';
+import MiscSettingTab from '@components/settings/MiscSettingTab.vue';
 import { provideAttachSettingTabKey, SettingTab } from '@components/settings/settings-context';
 import { SettingsModel } from '@interfaces/settings-model';
 import { loadSettingsFromLocalstorage, saveSettingsToLocalstorage } from '@services/settings-service';

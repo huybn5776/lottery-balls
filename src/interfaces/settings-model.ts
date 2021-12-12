@@ -4,4 +4,5 @@ export interface SettingsModel {
   numbersToOmit?: number[];
   ballLabels?: string[];
   names?: string[];
+  autoPause?: boolean;
 }
