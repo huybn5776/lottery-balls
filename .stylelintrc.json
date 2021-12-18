@@ -8,6 +8,9 @@
     "stylelint-order",
     "stylelint-config-rational-order/plugin"
   ],
+  "ignoreFiles": [
+    "**/*.vue"
+  ],
   "rules": {
     "at-rule-name-case": "lower",
     "at-rule-name-space-after": "always-single-line",
@@ -124,11 +127,6 @@
     "declaration-colon-space-before": "never",
     "declaration-block-single-line-max-declarations": 1,
     "declaration-block-trailing-semicolon": "always",
-    "declaration-property-value-blacklist": {
-      "/^border/": [
-        "none"
-      ]
-    },
     "at-rule-empty-line-before": [
       "always",
       {
